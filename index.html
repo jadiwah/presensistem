@@ -1,92 +1,915 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <title>Dashboard & Sistem Presensi Otomatis Anak Wali (Sep–Des)</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- SheetJS dimuat dengan defer agar tidak memblokir render awal pada jaringan lambat -->
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-          },
-        },
-      },
-    };
-  </script>
   <style>
-    body {
-      background-color: #f8fafc;
-      color: #0f172a;
-      -webkit-tap-highlight-color: transparent;
+    /* =========================================================================
+       1. PURE LIGHTWEIGHT CSS (0ms Parse, Tanpa CDN / MutationObserver)
+       ========================================================================= */
+    :root {
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --text-light: #64748b;
+
+      --primary: #4338ca;
+      --primary-hover: #3730a3;
+      --primary-soft: #eef2ff;
+      --primary-border: #c7d2fe;
+
+      --emerald: #059669;
+      --emerald-hover: #047857;
+      --emerald-soft: #ecfdf5;
+      --emerald-border: #6ee7b7;
+
+      --blue: #1d4ed8;
+      --blue-soft: #eff6ff;
+      --blue-border: #93c5fd;
+
+      --amber: #b45309;
+      --amber-soft: #fffbeb;
+      --amber-border: #fcd34d;
+
+      --rose: #be123c;
+      --rose-hover: #9f1239;
+      --rose-soft: #fff1f2;
+      --rose-border: #fda4af;
+
+      --violet: #6d28d9;
+      --violet-soft: #f5f3ff;
+      --violet-border: #c4b5fd;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
     }
-    /* Menghilangkan delay tap 300ms pada Chrome Android & Safari iOS */
-    button, a, select, input, textarea, label {
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
+    }
+
+    button, input, select, textarea, label, a {
+      font-family: inherit;
       touch-action: manipulation;
     }
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
+
+    button {
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: none;
+      color: inherit;
+      font-weight: 700;
+      border-radius: var(--radius-md);
+      transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
     }
-    .no-scrollbar {
-      -ms-overflow-style: none;
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    input[type="text"], select, textarea {
+      width: 100%;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: 9px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input[type="text"]:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(67, 56, 202, 0.15);
+    }
+
+    /* Layout Containers */
+    .container {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 12px;
+    }
+
+    @media (min-width: 640px) {
+      .container { padding: 0 20px; }
+    }
+
+    /* Sticky Header (Tanpa backdrop-blur agar GPU mobile ringan) */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-xs);
+    }
+
+    .header-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 0 8px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1 1 240px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (min-width: 640px) {
+      .brand-title { font-size: 17px; }
+    }
+
+    .brand-sub {
+      margin: 1px 0 0;
+      font-size: 11px;
+      color: var(--text-light);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .year-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .year-box select {
+      width: auto;
+      padding: 3px 6px;
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 8px;
+    }
+
+    .sync-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--emerald-soft);
+      color: var(--emerald);
+      border: 1px solid var(--emerald-border);
+      white-space: nowrap;
+    }
+
+    .sync-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+    }
+
+    /* 4-Tab Navigation Bar */
+    .tab-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 8px 0 10px;
+      border-top: 1px solid #f1f5f9;
       scrollbar-width: none;
     }
-    /* Optimasi rendering 60fps untuk daftar 18 pekan (52 pertemuan) */
-    .pekan-card {
+    .tab-nav::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      min-height: 38px;
+    }
+
+    @media (min-width: 640px) {
+      .tab-btn { font-size: 13px; padding: 8px 14px; }
+    }
+
+    .tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .tab-badge {
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 800;
+      background: var(--rose);
+      color: #fff;
+    }
+
+    .tab-badge.zero {
+      background: var(--emerald);
+    }
+
+    /* Main Content & Cards */
+    .main-wrap {
+      padding-top: 14px;
+      padding-bottom: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      box-shadow: var(--shadow-xs);
+    }
+
+    @media (min-width: 640px) {
+      .card { padding: 18px; }
+    }
+
+    .hidden { display: none !important; }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 13px;
+      font-size: 12px;
+      min-height: 38px;
+      border-radius: var(--radius-md);
+      white-space: nowrap;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 11px;
+      min-height: 32px;
+      border-radius: var(--radius-sm);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .btn-primary-soft {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-color: var(--primary-border);
+    }
+
+    .btn-emerald {
+      background: var(--emerald);
+      color: #fff;
+      border-color: var(--emerald);
+    }
+    .btn-emerald:hover { background: var(--emerald-hover); }
+
+    .btn-emerald-soft {
+      background: var(--emerald-soft);
+      color: var(--emerald);
+      border-color: var(--emerald-border);
+    }
+
+    .btn-rose {
+      background: var(--rose);
+      color: #fff;
+      border-color: var(--rose);
+    }
+    .btn-rose:hover { background: var(--rose-hover); }
+
+    .btn-rose-soft {
+      background: var(--rose-soft);
+      color: var(--rose);
+      border-color: var(--rose-border);
+    }
+
+    .btn-violet {
+      background: var(--violet);
+      color: #fff;
+      border-color: var(--violet);
+    }
+
+    .btn-violet-soft {
+      background: var(--violet-soft);
+      color: var(--violet);
+      border-color: var(--violet-border);
+    }
+
+    .btn-amber-soft {
+      background: var(--amber-soft);
+      color: var(--amber);
+      border-color: var(--amber-border);
+    }
+
+    .btn-neutral {
+      background: #f1f5f9;
+      color: #1e293b;
+      border-color: var(--border-strong);
+    }
+    .btn-neutral:hover { background: #e2e8f0; }
+
+    /* Grids & Flex Helpers */
+    .grid-kpi {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (min-width: 768px) {
+      .grid-kpi { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    }
+
+    .kpi-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      box-shadow: var(--shadow-xs);
+    }
+    .kpi-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-light);
+      letter-spacing: 0.03em;
+    }
+    .kpi-val {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 2px 0;
+      color: var(--text);
+    }
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--text-light);
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 768px) {
+      .filter-grid {
+        grid-template-columns: 1.4fr 1.2fr 1fr 1fr;
+      }
+    }
+
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 768px) {
+      .two-col-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .three-col-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 768px) {
+      .three-col-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* Rekap Student Cards */
+    .rekap-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--emerald);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      box-shadow: var(--shadow-xs);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .rekap-card.has-missed {
+      border-left-color: var(--rose);
+    }
+
+    .rekap-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .rekap-title-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stu-link {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+      padding: 0;
+      border: none;
+      text-align: left;
+      text-decoration: underline;
+      text-decoration-color: #a5b4fc;
+      text-underline-offset: 3px;
+    }
+    .stu-link:hover { color: var(--primary); }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text-muted);
+    }
+    .pill-amber { background: var(--amber-soft); color: var(--amber); border-color: var(--amber-border); }
+    .pill-rose { background: var(--rose-soft); color: var(--rose); border-color: var(--rose-border); }
+    .pill-emerald { background: var(--emerald-soft); color: var(--emerald); border-color: var(--emerald-border); }
+    .pill-blue { background: var(--blue-soft); color: var(--blue); border-color: var(--blue-border); }
+    .pill-violet { background: var(--violet-soft); color: var(--violet); border-color: var(--violet-border); }
+
+    .missed-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    /* Pekan Block & Meeting Rows (Optimized for Android 60fps) */
+    .pekan-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-xs);
       content-visibility: auto;
-      contain-intrinsic-size: auto 280px;
+      contain-intrinsic-size: auto 320px;
     }
-    @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+
+    .pekan-header {
+      background: #1e293b;
+      color: #fff;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
-    .animate-fade-in {
-      animation: fadeSlideIn 0.16s ease-out forwards;
+
+    .pekan-badge {
+      background: #4f46e5;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+
+    .meeting-row {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #ffffff;
+    }
+    .meeting-row:first-child { border-top: none; }
+    .meeting-row.row-alert { background: #fffafb; }
+
+    .meeting-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .meeting-date-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    /* Session Box & 4 Status Buttons */
+    .session-box {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .session-box.missed-active {
+      border-color: var(--rose-border);
+      background: #fff9fa;
+    }
+
+    .session-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      min-height: 26px;
+    }
+
+    .session-mapel-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .sesi-tag {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+    .sesi-tag.s2 {
+      background: var(--violet-soft);
+      color: var(--violet);
+    }
+
+    .mapel-btn {
+      text-align: left;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      padding: 2px 4px;
+      border-radius: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .mapel-btn:hover {
+      background: #f1f5f9;
+      color: var(--primary);
+    }
+    .mapel-btn.struck {
+      text-decoration: line-through;
+      color: var(--text-light);
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 5px;
+    }
+
+    .st-btn {
+      min-height: 40px;
+      padding: 6px 2px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 1px solid var(--border-strong);
+      background: #ffffff;
+      color: #334155;
+      text-align: center;
+    }
+
+    .st-btn.active-Hadir {
+      background: var(--emerald-soft);
+      color: var(--emerald);
+      border-color: var(--emerald);
+      box-shadow: inset 0 0 0 1px var(--emerald);
+      font-weight: 800;
+    }
+    .st-btn.active-Izin {
+      background: var(--blue-soft);
+      color: var(--blue);
+      border-color: var(--blue);
+      box-shadow: inset 0 0 0 1px var(--blue);
+      font-weight: 800;
+    }
+    .st-btn.active-Sakit {
+      background: var(--amber-soft);
+      color: var(--amber);
+      border-color: #d97706;
+      box-shadow: inset 0 0 0 1px #d97706;
+      font-weight: 800;
+    }
+    .st-btn.active-Alpha {
+      background: var(--rose-soft);
+      color: var(--rose);
+      border-color: var(--rose);
+      box-shadow: inset 0 0 0 1px var(--rose);
+      font-weight: 800;
+    }
+
+    /* Quick Student Pills Strip */
+    .pills-strip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
+      scrollbar-width: none;
+    }
+    .pills-strip::-webkit-scrollbar { display: none; }
+
+    .stu-pill-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--surface-alt);
+      border: 1px solid var(--border-strong);
+      color: var(--text-muted);
+    }
+    .stu-pill-btn.selected {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* Summary Strip on Tab 2 */
+    .summary-strip {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 640px) {
+      .summary-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .summary-strip { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .mini-missed-list {
+      margin: 6px 0 0;
+      padding: 0;
+      list-style: none;
+      max-height: 92px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+    }
+    .mini-missed-list li {
+      padding: 4px 7px;
+      border-radius: 6px;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Upload Dropzone & Preview Table */
+    .dropzone {
+      border: 2px dashed #a5b4fc;
+      background: #f8faff;
+      border-radius: var(--radius-lg);
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .dropzone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      max-height: 360px;
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+    table.data-table th {
+      background: #1e293b;
+      color: #fff;
+      padding: 8px 10px;
+      position: sticky;
+      top: 0;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    table.data-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Banners, Modal & Toast */
+    .banner {
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+    }
+    .banner-indigo { background: var(--primary-soft); border: 1px solid var(--primary-border); color: #1e1b4b; }
+    .banner-amber { background: var(--amber-soft); border: 1px solid var(--amber-border); color: #78350f; }
+    .banner-rose { background: var(--rose-soft); border: 2px solid var(--rose-border); color: #881337; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(15, 23, 42, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-box {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      max-width: 440px;
+      width: 100%;
+      padding: 18px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .toast-stack {
+      position: fixed;
+      bottom: 14px;
+      right: 14px;
+      left: 14px;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      pointer-events: none;
+    }
+    .toast-item {
+      pointer-events: auto;
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+      max-width: 100%;
+    }
+    .toast-item.error { background: var(--rose); }
+    .toast-item.success { background: #065f46; }
+
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .section-title {
+      margin: 0 0 4px;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .section-desc {
+      margin: 0;
+      font-size: 12px;
+      color: var(--text-light);
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-indigo-100 selection:text-indigo-900">
+<body>
 
-  <!-- ==================== STICKY HEADER & 5-TAB NAVIGATION ==================== -->
-  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-2xs">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-      <!-- Baris Atas: Judul, Pemilih Tahun, Backup & Indikator Simpan -->
-      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between py-2.5 sm:py-3 gap-2">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-2xs shrink-0">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-              </svg>
-            </div>
-            <div class="min-w-0">
-              <h1 class="text-sm sm:text-lg font-extrabold text-slate-900 leading-tight truncate">
-                Sistem Presensi & Jadwal Anak Wali
-              </h1>
-              <p id="header-schedule-info" class="text-[11px] sm:text-xs text-slate-500 font-medium truncate">
-                Selasa, Kamis, Sabtu • 1 Sep – 31 Des 2026 (Pekan 1–18)
-              </p>
-            </div>
+  <!-- ==================== STICKY HEADER & 4-TAB NAVIGATION ==================== -->
+  <header class="app-header">
+    <div class="container">
+      <div class="header-top">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
           </div>
-
-          <!-- Status Simpan Mobile -->
-          <span id="sync-badge-mobile" class="lg:hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span class="sync-label-text">Tersimpan</span>
-          </span>
+          <div style="min-width:0">
+            <h1 class="brand-title">Dashboard Presensi Otomatis Anak Wali</h1>
+            <p id="header-schedule-info" class="brand-sub">Selasa, Kamis, Sabtu • 1 Sep – 31 Des 2026 (Pekan 1–18)</p>
+          </div>
         </div>
 
-        <!-- Bar Kontrol Kanan -->
-        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <div class="inline-flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
-            <label for="year-selector" class="text-[11px] font-bold text-slate-500 px-1.5">Tahun:</label>
-            <select id="year-selector" onchange="handleYearChange()"
-              class="bg-white text-xs font-extrabold text-slate-900 rounded-lg px-2 py-1 border border-slate-200 focus:outline-none focus:border-indigo-500">
+        <div class="header-controls">
+          <div class="year-box">
+            <label for="year-selector">Tahun:</label>
+            <select id="year-selector" data-act="change-year">
               <option value="2025">2025</option>
               <option value="2026" selected>2026</option>
               <option value="2027">2027</option>
@@ -94,575 +917,399 @@
             </select>
           </div>
 
-          <button type="button" onclick="downloadBackupJSON()"
-            class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-            </svg>
-            <span>Backup (.json)</span>
+          <button type="button" class="btn btn-sm btn-primary-soft" data-act="backup-json">
+            Backup (.json)
           </button>
 
-          <button type="button" onclick="exportSummaryWorkbook()"
-            class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs transition">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span>Export Rekap</span>
+          <button type="button" class="btn btn-sm btn-emerald" data-act="export-rekap">
+            Export Rekap
           </button>
 
-          <span id="sync-badge-desktop" class="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span class="sync-label-text">✓ Tersimpan Otomatis</span>
+          <span class="sync-pill">
+            <span class="sync-dot"></span>
+            <span id="sync-status-text">✓ Tersimpan</span>
           </span>
         </div>
       </div>
 
-      <!-- Baris Navigasi 5 Tab Utama (Horizontal Smooth Scroll di HP) -->
-      <nav aria-label="Navigasi Utama" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5 pt-1 border-t border-slate-100">
-        <button type="button" id="tab-btn-rekap" onclick="switchTab('rekap')"
-          class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow-2xs transition">
-          <span>1. Dashboard Rekap & WA</span>
-          <span id="tab-badge-missed" class="px-1.5 py-0.5 text-[10px] font-extrabold rounded-full bg-rose-500 text-white">0</span>
+      <!-- Navigasi 4 Tab Utama -->
+      <nav class="tab-nav" aria-label="Menu Utama">
+        <button type="button" id="tab-btn-rekap" class="tab-btn active" data-act="switch-tab" data-val="rekap">
+          <span>1. Dashboard Rekap &amp; WA</span>
+          <span id="tab-badge-missed" class="tab-badge">0</span>
         </button>
 
-        <button type="button" id="tab-btn-single" onclick="switchTab('single')"
-          class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+        <button type="button" id="tab-btn-single" class="tab-btn" data-act="switch-tab" data-val="single">
           <span>2. Input 1: Kartu 1 Anak (Sep–Des)</span>
         </button>
 
-        <button type="button" id="tab-btn-class" onclick="switchTab('class')"
-          class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+        <button type="button" id="tab-btn-class" class="tab-btn" data-act="switch-tab" data-val="class">
           <span>3. Input 2: Absen Kelas Per Tanggal</span>
         </button>
 
-        <button type="button" id="tab-btn-upload" onclick="switchTab('upload')"
-          class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
-          <span>4. Upload Spreadsheet Mapel</span>
-        </button>
-
-        <button type="button" id="tab-btn-settings" onclick="switchTab('settings')"
-          class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
-          <span>5. Atur Siswa & Jadwal</span>
+        <button type="button" id="tab-btn-settings" class="tab-btn" data-act="switch-tab" data-val="settings">
+          <span>4. Upload Mapel &amp; Pengaturan</span>
         </button>
       </nav>
     </div>
   </header>
 
   <!-- ==================== MAIN WORKSPACE ==================== -->
-  <main id="main-workspace" class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-5 space-y-4 sm:space-y-5">
+  <main id="main-workspace" class="container main-wrap">
 
-    <!-- Panel Pemulihan Darurat (Muncul otomatis hanya jika terjadi error) -->
-    <div id="crash-recovery-banner" class="hidden bg-rose-50 border-2 border-rose-300 rounded-2xl p-4 sm:p-5 space-y-3">
-      <div class="flex items-start gap-3">
-        <span class="w-8 h-8 rounded-xl bg-rose-600 text-white font-extrabold flex items-center justify-center shrink-0">!</span>
-        <div class="space-y-1">
-          <h2 class="text-sm sm:text-base font-extrabold text-rose-950">Terdeteksi Gangguan Data Penyimpanan Lama</h2>
-          <p id="crash-recovery-msg" class="text-xs text-rose-800">
-            Format data lama di browser menyebabkan gangguan tampilan. Anda dapat mengunduh cadangan data terlebih dahulu atau mereset penyimpanan ke kondisi bersih.
-          </p>
-        </div>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <button type="button" onclick="downloadBackupJSON()"
-          class="px-3.5 py-2 rounded-xl bg-white border border-rose-300 text-rose-800 text-xs font-bold">
-          Unduh Data Saat Ini (.json)
-        </button>
-        <button type="button" onclick="emergencyResetStorage()"
-          class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold">
-          Pulihkan & Mulai Bersih Sekarang
-        </button>
-      </div>
-    </div>
-
-    <!-- Banner Peringatan Jika Browser Membatasi LocalStorage -->
-    <div id="storage-warning-banner" class="hidden bg-amber-50 border border-amber-300 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      <p class="text-xs text-amber-900">
-        <strong>Mode Memori Sesi:</strong> Browser membatasi penyimpanan lokal otomatis. Gunakan tombol <strong>Backup (.json)</strong> sebelum menutup tab.
-      </p>
-      <button type="button" onclick="downloadBackupJSON()"
-        class="shrink-0 px-3.5 py-1.5 rounded-xl bg-amber-600 text-white text-xs font-bold">
-        Unduh Backup
-      </button>
-    </div>
-
-    <!-- Banner Data Contoh Simulasi -->
-    <div id="demo-mode-banner" class="hidden bg-indigo-50/90 border border-indigo-200 rounded-2xl p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <!-- Error Boundary Recovery Banner -->
+    <div id="crash-recovery-banner" class="banner banner-rose hidden">
       <div>
-        <p class="text-xs sm:text-sm font-bold text-indigo-950">Mode Data Contoh Simulasi Aktif</p>
-        <p class="text-xs text-indigo-800/80">
-          Menampilkan 3 anak wali contoh. Klik tombol di samping untuk mengosongkan contoh dan mengisi data anak wali Anda sendiri.
-        </p>
+        <strong>Terdeteksi Gangguan Data Penyimpanan:</strong>
+        <span id="crash-recovery-msg">Klik tombol di samping untuk memulihkan ke kondisi bersih.</span>
       </div>
-      <button type="button" onclick="promptClearAllData()"
-        class="shrink-0 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition">
-        Hapus Contoh & Mulai Baru
-      </button>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn btn-sm btn-neutral" data-act="backup-json">Unduh Data (.json)</button>
+        <button type="button" class="btn btn-sm btn-rose" data-act="emergency-reset">Pulihkan Sekarang</button>
+      </div>
     </div>
 
-    <!-- ======================================================================= -->
-    <!-- TAB 1: DASHBOARD REKAP & FOLLOW-UP WHATSAPP                             -->
-    <!-- ======================================================================= -->
-    <section id="panel-rekap" class="space-y-4 animate-fade-in">
-      <!-- 5 Kartu KPI Atas -->
-      <div id="rekap-kpi-cards" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3"></div>
+    <!-- Memory Fallback Warning -->
+    <div id="storage-warning-banner" class="banner banner-amber hidden">
+      <div>
+        <strong>Mode Memori Sesi:</strong> Penyimpanan lokal browser dibatasi. Gunakan tombol <strong>Backup (.json)</strong> sebelum menutup tab.
+      </div>
+      <button type="button" class="btn btn-sm btn-primary" data-act="backup-json">Unduh Backup</button>
+    </div>
 
-      <!-- Bar Filter & Pencarian -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-4 shadow-2xs space-y-3">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center">
-          <div class="md:col-span-5 relative">
-            <input type="text" id="rekap-search-input" oninput="renderRekapTab()"
-              placeholder="Cari nama anak wali..."
-              class="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500" />
-            <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+    <!-- Demo Mode Banner -->
+    <div id="demo-mode-banner" class="banner banner-indigo hidden">
+      <div>
+        <strong>Mode Data Contoh Simulasi Aktif:</strong> Menampilkan 3 anak wali contoh agar Anda bisa langsung mencoba fitur.
+      </div>
+      <button type="button" class="btn btn-sm btn-primary" data-act="prompt-clear-all">Hapus Contoh &amp; Mulai Baru</button>
+    </div>
+
+    <!-- ===================================================================
+         TAB 1: DASHBOARD REKAP & FOLLOW-UP WHATSAPP
+         =================================================================== -->
+    <section id="panel-rekap" style="display:flex;flex-direction:column;gap:14px;">
+      <div id="rekap-kpi-cards" class="grid-kpi"></div>
+
+      <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="filter-grid">
+          <div>
+            <label class="field-label" for="rekap-search-input">Cari Nama Anak Wali</label>
+            <input type="text" id="rekap-search-input" placeholder="Ketik nama anak wali..." />
           </div>
 
-          <div class="md:col-span-4">
-            <select id="rekap-status-filter" onchange="renderRekapTab()"
-              class="w-full px-3 py-2.5 text-xs sm:text-sm font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500">
+          <div>
+            <label class="field-label" for="rekap-student-dropdown">Filter 1 Anak Wali</label>
+            <select id="rekap-student-dropdown">
               <option value="all">Semua Anak Wali</option>
-              <option value="missed">Punya Tanggungan (Terlewat)</option>
-              <option value="safe">Siswa Aman (0 Tanggungan)</option>
             </select>
           </div>
 
-          <div class="md:col-span-3">
-            <select id="rekap-pekan-filter" onchange="renderRekapTab()"
-              class="w-full px-3 py-2.5 text-xs sm:text-sm font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500">
-              <option value="all">Semua Pekan (Pekan 1–18)</option>
+          <div>
+            <label class="field-label" for="rekap-pekan-filter">Filter Pekan</label>
+            <select id="rekap-pekan-filter">
+              <option value="all">Semua Pekan (1–18)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="field-label" for="rekap-status-filter">Filter Tanggungan</label>
+            <select id="rekap-status-filter">
+              <option value="all">Semua Status</option>
+              <option value="missed">Ada Tanggungan (Terlewat)</option>
+              <option value="safe">Aman (0 Tanggungan)</option>
             </select>
           </div>
         </div>
 
-        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
-          <div class="flex flex-wrap items-center gap-1.5">
-            <span class="font-bold text-slate-600">Status:</span>
-            <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">Hadir</span>
-            <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-semibold border border-blue-200">Izin</span>
-            <span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 font-semibold border border-amber-200">Sakit</span>
-            <span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-semibold border border-rose-200">Alpha</span>
-            <span class="px-2 py-0.5 rounded-md bg-violet-50 text-violet-700 font-semibold border border-violet-200">✓ Susulan</span>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-top:8px;border-top:1px solid #f1f5f9;font-size:11px;color:var(--text-light);">
+          <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;">
+            <strong>Kode:</strong>
+            <span class="pill pill-emerald">Hadir</span>
+            <span class="pill pill-blue">Izin</span>
+            <span class="pill pill-amber">Sakit</span>
+            <span class="pill pill-rose">Alpha</span>
+            <span class="pill pill-violet">✓ Susulan</span>
           </div>
           <span>Klik nama anak wali untuk buka Kartu Kendali Sep–Des</span>
         </div>
       </div>
 
-      <!-- Daftar Rekap Per Anak Wali -->
-      <div id="rekap-student-list" class="space-y-3"></div>
+      <div id="rekap-student-list" style="display:flex;flex-direction:column;gap:10px;"></div>
     </section>
 
-    <!-- ======================================================================= -->
-    <!-- TAB 2: INPUT 1 — KARTU KENDALI 1 ANAK BERDERET (SEP – DES)              -->
-    <!-- ======================================================================= -->
-    <section id="panel-single" class="hidden space-y-4 animate-fade-in">
-      <!-- Bar Atas: Input Cepat Tambah 1 Anak Baru & Pemilih Anak Wali -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-5 shadow-2xs space-y-3.5">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-end">
-          <div class="lg:col-span-5">
-            <label for="single-quick-add-input" class="block text-xs font-extrabold uppercase tracking-wider text-indigo-700 mb-1.5">
-              + Input Nama Anak Wali Baru (Langsung Muncul Sep–Des)
-            </label>
-            <form onsubmit="handleQuickAddFromSingleTab(event)" class="flex gap-2">
-              <input type="text" id="single-quick-add-input"
-                placeholder="Ketik nama anak (opsional: - 0812xxx)..."
-                class="flex-1 min-w-0 px-3.5 py-2.5 text-sm font-medium bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500" />
-              <button type="submit"
-                class="shrink-0 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold transition">
-                + Tambah
-              </button>
+    <!-- ===================================================================
+         TAB 2: INPUT 1 — KARTU KENDALI 1 ANAK BERDERET (SEP – DES)
+         =================================================================== -->
+    <section id="panel-single" class="hidden" style="flex-direction:column;gap:14px;">
+      <div class="card" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="two-col-grid">
+          <div>
+            <label class="field-label" for="single-quick-add-input">+ Input Nama Anak Wali Baru (Langsung Muncul Sep–Des)</label>
+            <form id="form-single-quick-add" style="display:flex;gap:8px;">
+              <input type="text" id="single-quick-add-input" placeholder="Nama anak (opsional: - 0812xxx)..." />
+              <button type="submit" class="btn btn-primary" style="flex-shrink:0;">+ Tambah</button>
             </form>
           </div>
 
-          <div class="lg:col-span-7">
-            <label for="single-student-select" class="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-1.5">
-              Pilih Anak Wali untuk Input / Pantau Berderet (Sep – Des):
-            </label>
-            <select id="single-student-select" onchange="selectSingleStudent(this.value)"
-              class="w-full px-3.5 py-2.5 text-sm font-bold text-slate-900 bg-indigo-50/60 border-2 border-indigo-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-600">
-            </select>
+          <div>
+            <label class="field-label" for="single-student-select">Pilih Anak Wali untuk Input / Pantau Berderet (Sep–Des)</label>
+            <select id="single-student-select" style="font-weight:800;background:#f8faff;border-color:#a5b4fc;"></select>
           </div>
         </div>
 
-        <!-- Pil Pindah Cepat Antar Anak -->
-        <div id="single-student-pills" class="pt-3 border-t border-slate-100 flex items-center gap-2 overflow-x-auto no-scrollbar"></div>
+        <div id="single-student-pills" class="pills-strip"></div>
       </div>
 
-      <!-- Strip Ringkasan Real-Time Khusus 1 Anak (Diperbarui secara Surgical <1ms) -->
-      <div id="single-summary-strip" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"></div>
+      <!-- Ringkasan Khusus 1 Anak (Diperbarui langsung secara surgical) -->
+      <div id="single-summary-strip" class="summary-strip"></div>
 
-      <!-- Toolbar Aksi Cepat & Filter Deretan Pertemuan -->
+      <!-- Toolbar Filter & Aksi Cepat -->
       <div id="single-toolbar-container"></div>
 
-      <!-- Daftar Pertemuan Berderetan Per Pekan 1–18 -->
-      <div id="single-pekan-list" class="space-y-4"></div>
+      <!-- Daftar 18 Pekan Berderetan -->
+      <div id="single-pekan-list" style="display:flex;flex-direction:column;gap:14px;"></div>
     </section>
 
-    <!-- ======================================================================= -->
-    <!-- TAB 3: INPUT 2 — ABSEN KELAS PER TANGGAL (SAAT HADIR DI KELAS)          -->
-    <!-- ======================================================================= -->
-    <section id="panel-class" class="hidden space-y-4 animate-fade-in">
-      <div class="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-5 shadow-2xs space-y-3.5">
-        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-3.5">
-          <div class="flex-1 space-y-1.5">
-            <label for="class-date-select" class="block text-xs font-extrabold uppercase tracking-wider text-indigo-700">
-              Pilih Tanggal Pertemuan Kelas (Selasa, Kamis, Sabtu):
-            </label>
-            <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
-              <button type="button" onclick="navigateClassDate(-1)"
-                class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold shrink-0">
-                ← Sebelumnya
-              </button>
-
-              <select id="class-date-select" onchange="onSelectClassDate(this.value)"
-                class="flex-1 min-w-[200px] px-3.5 py-2.5 text-sm font-bold text-slate-900 bg-indigo-50/60 border-2 border-indigo-200 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-600">
-              </select>
-
-              <button type="button" onclick="navigateClassDate(1)"
-                class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold shrink-0">
-                Berikutnya →
-              </button>
-
-              <button type="button" onclick="jumpToNearestClassDate()"
-                class="px-3 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold shrink-0">
-                Tanggal Terdekat
-              </button>
+    <!-- ===================================================================
+         TAB 3: INPUT 2 — ABSEN KELAS PER TANGGAL
+         =================================================================== -->
+    <section id="panel-class" class="hidden" style="flex-direction:column;gap:14px;">
+      <div class="card" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="two-col-grid" style="align-items:end;">
+          <div>
+            <label class="field-label" for="class-date-select">Pilih Tanggal Pertemuan Kelas (Selasa, Kamis, Sabtu)</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <button type="button" class="btn btn-neutral" data-act="class-nav-date" data-val="-1">&lt; Prev</button>
+              <select id="class-date-select" style="flex:1 1 180px;font-weight:800;background:#f8faff;border-color:#a5b4fc;"></select>
+              <button type="button" class="btn btn-neutral" data-act="class-nav-date" data-val="1">Next &gt;</button>
+              <button type="button" class="btn btn-primary-soft" data-act="class-nearest-date">Terdekat</button>
             </div>
           </div>
 
-          <div class="lg:w-80">
-            <label for="class-quick-add-student" class="block text-xs font-bold text-slate-500 mb-1.5">
-              + Tambah Anak Wali Baru di Kelas:
-            </label>
-            <form onsubmit="handleQuickAddFromClassTab(event)" class="flex gap-1.5">
-              <input type="text" id="class-quick-add-student"
-                placeholder="Nama siswa baru..."
-                class="flex-1 min-w-0 px-3 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-indigo-500" />
-              <button type="submit"
-                class="shrink-0 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold">
-                + Tambah
-              </button>
+          <div>
+            <label class="field-label" for="class-quick-add-student">+ Tambah Anak Wali Baru di Kelas</label>
+            <form id="form-class-quick-add" style="display:flex;gap:8px;">
+              <input type="text" id="class-quick-add-student" placeholder="Nama siswa baru..." />
+              <button type="submit" class="btn btn-primary" style="flex-shrink:0;">+ Tambah</button>
             </form>
           </div>
         </div>
 
-        <div id="class-date-meta-bar" class="pt-3 border-t border-slate-100 space-y-3"></div>
+        <div id="class-date-meta-bar" style="padding-top:12px;border-top:1px solid #f1f5f9;display:flex;flex-direction:column;gap:10px;"></div>
       </div>
 
-      <div id="class-students-attendance-list" class="space-y-3"></div>
+      <div id="class-students-attendance-list" style="display:flex;flex-direction:column;gap:10px;"></div>
     </section>
 
-    <!-- ======================================================================= -->
-    <!-- TAB 4: UPLOAD SPREADSHEET JADWAL MAPEL (SESI 1 & SESI 2)                -->
-    <!-- ======================================================================= -->
-    <section id="panel-upload" class="hidden space-y-4 animate-fade-in">
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-5">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-          <div class="space-y-1">
-            <h2 class="text-base sm:text-lg font-extrabold text-slate-900">
-              Upload Spreadsheet Jadwal Mapel (Sesi 1 & Sesi 2)
-            </h2>
-            <p class="text-xs sm:text-sm text-slate-500">
-              Unggah file <strong>.xlsx</strong>, <strong>.xls</strong>, atau <strong>.csv</strong>. Sistem otomatis membaca tanggal maupun pasangan <em>Pekan + Hari</em> dan mengisi mapel Sesi 1 & Sesi 2 di seluruh jadwal.
+    <!-- ===================================================================
+         TAB 4: UPLOAD SPREADSHEET MAPEL & PENGATURAN
+         =================================================================== -->
+    <section id="panel-settings" class="hidden" style="flex-direction:column;gap:14px;">
+
+      <!-- 4A. Upload Spreadsheet Jadwal Mapel -->
+      <div class="card" style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
+          <div>
+            <h2 class="section-title">1. Upload Spreadsheet Jadwal Mapel (Sesi 1 &amp; Sesi 2)</h2>
+            <p class="section-desc">
+              Unggah file <strong>.csv</strong> (instan 0ms offline) atau <strong>.xlsx / .xls</strong>. Mendukung kolom <code>Tanggal</code> maupun <code>Pekan + Hari</code>.
             </p>
           </div>
-
-          <button type="button" onclick="downloadScheduleTemplateFile()"
-            class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-2xs transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Download Template Jadwal
+          <button type="button" class="btn btn-emerald" data-act="download-template-csv">
+            Download Template CSV (52 Pertemuan Sep–Des)
           </button>
         </div>
 
-        <div id="upload-dropzone"
-          ondragover="handleSpreadsheetDragOver(event)"
-          ondragleave="handleSpreadsheetDragLeave(event)"
-          ondrop="handleSpreadsheetDrop(event)"
-          onclick="document.getElementById('spreadsheet-file-input').click()"
-          class="cursor-pointer rounded-2xl border-2 border-dashed border-indigo-300 bg-indigo-50/40 hover:bg-indigo-50/80 hover:border-indigo-500 p-6 sm:p-8 text-center transition space-y-2">
-          <input type="file" id="spreadsheet-file-input" accept=".xlsx,.xls,.csv" onchange="handleSpreadsheetFileInput(event)" class="hidden" />
-          <div class="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-600 mx-auto flex items-center justify-center">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-          </div>
-          <p class="text-sm sm:text-base font-extrabold text-slate-900">
-            Ketuk di sini untuk memilih file Excel (.xlsx / .xls) atau CSV (.csv)
+        <div id="upload-dropzone" class="dropzone" data-act="trigger-file-upload">
+          <input type="file" id="spreadsheet-file-input" accept=".csv,.xlsx,.xls,.tsv,.txt" class="hidden" />
+          <p style="margin:0 0 4px;font-size:14px;font-weight:800;color:var(--text);">
+            Ketuk di sini untuk memilih file Spreadsheet (.csv / .xlsx / .xls)
           </p>
-          <p class="text-xs text-slate-500">
-            Mendukung kolom <code>Tanggal | Sesi 1 | Sesi 2</code>, format vertikal <code>Tanggal | Sesi | Mapel</code>, maupun <code>Pekan | Hari | Sesi 1 | Sesi 2</code>
+          <p style="margin:0;font-size:12px;color:var(--text-light);">
+            Format kolom: <code>Pekan | Hari | Tanggal | Mapel Sesi 1 | Mapel Sesi 2</code> (atau <code>Tanggal | Sesi 1 | Sesi 2</code>)
           </p>
         </div>
 
-        <!-- Pratinjau & Pemetaan Kolom -->
-        <div id="upload-preview-workspace" class="hidden pt-4 border-t border-slate-200 space-y-4">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-100 text-indigo-700 shrink-0">AUTO-DETEKSI</span>
-              <h3 id="upload-loaded-filename" class="text-sm font-extrabold text-slate-900 truncate">file.xlsx</h3>
+        <div id="upload-preview-workspace" class="hidden" style="display:flex;flex-direction:column;gap:12px;padding-top:12px;border-top:1px solid var(--border);">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="pill pill-blue">AUTO-DETEKSI</span>
+              <strong id="upload-loaded-filename" style="font-size:13px;">file.csv</strong>
             </div>
-
-            <div class="flex flex-wrap items-center gap-2">
-              <div class="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-                <label for="upload-sheet-select" class="text-xs font-bold text-slate-600">Sheet:</label>
-                <select id="upload-sheet-select" onchange="onChangeUploadSheet(this.value)"
-                  class="bg-white text-xs font-bold text-slate-900 rounded-lg px-2 py-1 border border-slate-200 focus:outline-none">
-                </select>
-              </div>
-
-              <div class="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-                <label for="upload-layout-mode" class="text-xs font-bold text-slate-600">Format:</label>
-                <select id="upload-layout-mode" onchange="onChangeUploadMapping()"
-                  class="bg-white text-xs font-bold text-slate-900 rounded-lg px-2 py-1 border border-slate-200 focus:outline-none">
-                  <option value="horizontal">1 Baris = Sesi 1 & Sesi 2</option>
-                  <option value="vertical">Vertikal (Kolom Sesi + Mapel)</option>
-                </select>
-              </div>
+            <div id="upload-sheet-selector-wrap" class="hidden" style="display:flex;align-items:center;gap:6px;">
+              <label for="upload-sheet-select" style="font-size:12px;font-weight:700;">Sheet:</label>
+              <select id="upload-sheet-select" style="width:auto;padding:4px 8px;font-size:12px;"></select>
             </div>
           </div>
 
-          <div id="upload-mapping-controls" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"></div>
+          <div id="upload-mapping-controls" class="filter-grid"></div>
 
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2">
-            <div id="upload-preview-summary" class="flex flex-wrap items-center gap-2"></div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button type="button" onclick="clearSpreadsheetUploadState()"
-                class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
-                Batal
-              </button>
-              <button type="button" id="btn-apply-spreadsheet-schedule" onclick="applySpreadsheetSchedule()"
-                class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-xs font-bold shadow-2xs">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;">
+            <div id="upload-preview-summary" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+            <div style="display:flex;gap:8px;">
+              <button type="button" class="btn btn-neutral" data-act="clear-upload">Batal</button>
+              <button type="button" id="btn-apply-spreadsheet-schedule" class="btn btn-primary" data-act="apply-upload">
                 ✓ Terapkan Semua Mapel ke Jadwal
               </button>
             </div>
           </div>
 
-          <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-[360px] overflow-y-auto">
-            <table class="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead class="bg-slate-800 text-white sticky top-0 z-10 text-[11px] uppercase tracking-wider">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <th class="py-2 px-3">Baris</th>
-                  <th class="py-2 px-3">Pekan</th>
-                  <th class="py-2 px-3">Hari</th>
-                  <th class="py-2 px-3">Tanggal</th>
-                  <th class="py-2 px-3">Mapel Sesi 1</th>
-                  <th class="py-2 px-3">Mapel Sesi 2</th>
-                  <th class="py-2 px-3 text-right">Status</th>
+                  <th>Baris</th>
+                  <th>Pekan</th>
+                  <th>Hari</th>
+                  <th>Tanggal</th>
+                  <th>Mapel Sesi 1</th>
+                  <th>Mapel Sesi 2</th>
+                  <th>Status</th>
                 </tr>
               </thead>
-              <tbody id="upload-preview-tbody" class="divide-y divide-slate-200 bg-white"></tbody>
+              <tbody id="upload-preview-tbody"></tbody>
             </table>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ======================================================================= -->
-    <!-- TAB 5: ATUR SISWA, JADWAL TEMPLATE & BACKUP DATA                        -->
-    <!-- ======================================================================= -->
-    <section id="panel-settings" class="hidden space-y-4 animate-fade-in">
-      <!-- Template Mata Pelajaran Rutin (Selasa, Kamis, Sabtu) -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+      <!-- 4B. Template Mapel Rutin Selasa, Kamis, Sabtu -->
+      <div class="card" style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #f1f5f9;padding-bottom:10px;">
           <div>
-            <h2 class="text-base sm:text-lg font-extrabold text-slate-900">
-              1. Template Mata Pelajaran Rutin (Selasa, Kamis, Sabtu)
-            </h2>
-            <p class="text-xs text-slate-500 mt-0.5">
-              Mengisi default seluruh jadwal dari 1 September hingga 31 Desember.
-            </p>
+            <h2 class="section-title">2. Template Mata Pelajaran Rutin (Selasa, Kamis, Sabtu)</h2>
+            <p class="section-desc">Menjadi jadwal dasar seluruh pertemuan 1 September – 31 Desember.</p>
           </div>
-          <button type="button" id="btn-reset-overrides" onclick="promptResetScheduleOverrides()"
-            class="hidden self-start sm:self-center px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold">
+          <button type="button" id="btn-reset-overrides" class="btn btn-sm btn-amber-soft hidden" data-act="prompt-reset-overrides">
             Reset Mapel Kustom / Hasil Upload
           </button>
         </div>
 
-        <div class="flex flex-wrap items-center gap-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
-          <span class="text-[11px] font-bold text-slate-500 mr-1">Klik kolom lalu pilih cepat:</span>
-          <div id="settings-quick-subjects" class="flex flex-wrap gap-1.5"></div>
-        </div>
+        <div id="settings-quick-subjects" style="display:flex;flex-wrap:wrap;gap:6px;background:var(--surface-alt);padding:10px;border-radius:var(--radius-md);border:1px solid var(--border);"></div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 block">Hari SELASA</span>
+        <div class="three-col-grid">
+          <div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <strong style="font-size:12px;color:var(--primary);">HARI SELASA</strong>
             <div>
-              <label for="set-tpl-2-s1" class="block text-xs font-semibold text-slate-600 mb-1">Mapel Sesi 1</label>
-              <input type="text" id="set-tpl-2-s1" onfocus="activeTplInput = this"
-                class="w-full px-3 py-2 text-sm font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500" />
+              <label class="field-label" for="set-tpl-2-s1">Mapel Sesi 1</label>
+              <input type="text" id="set-tpl-2-s1" />
             </div>
             <div>
-              <label for="set-tpl-2-s2" class="block text-xs font-semibold text-slate-600 mb-1">Mapel Sesi 2</label>
-              <input type="text" id="set-tpl-2-s2" onfocus="activeTplInput = this"
-                class="w-full px-3 py-2 text-sm font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500" />
+              <label class="field-label" for="set-tpl-2-s2">Mapel Sesi 2</label>
+              <input type="text" id="set-tpl-2-s2" />
             </div>
           </div>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 block">Hari KAMIS</span>
+          <div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <strong style="font-size:12px;color:var(--primary);">HARI KAMIS</strong>
             <div>
-              <label for="set-tpl-4-s1" class="block text-xs font-semibold text-slate-600 mb-1">Mapel Sesi 1</label>
-              <input type="text" id="set-tpl-4-s1" onfocus="activeTplInput = this"
-                class="w-full px-3 py-2 text-sm font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500" />
+              <label class="field-label" for="set-tpl-4-s1">Mapel Sesi 1</label>
+              <input type="text" id="set-tpl-4-s1" />
             </div>
             <div>
-              <label for="set-tpl-4-s2" class="block text-xs font-semibold text-slate-600 mb-1">Mapel Sesi 2</label>
-              <input type="text" id="set-tpl-4-s2" onfocus="activeTplInput = this"
-                class="w-full px-3 py-2 text-sm font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500" />
+              <label class="field-label" for="set-tpl-4-s2">Mapel Sesi 2</label>
+              <input type="text" id="set-tpl-4-s2" />
             </div>
           </div>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-            <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 block">Hari SABTU</span>
+          <div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <strong style="font-size:12px;color:var(--primary);">HARI SABTU</strong>
             <div>
-              <label for="set-tpl-6-s1" class="block text-xs font-semibold text-slate-600 mb-1">Mapel Sesi 1</label>
-              <input type="text" id="set-tpl-6-s1" onfocus="activeTplInput = this"
-                class="w-full px-3 py-2 text-sm font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500" />
+              <label class="field-label" for="set-tpl-6-s1">Mapel Sesi 1</label>
+              <input type="text" id="set-tpl-6-s1" />
             </div>
             <div>
-              <label for="set-tpl-6-s2" class="block text-xs font-semibold text-slate-600 mb-1">Mapel Sesi 2</label>
-              <input type="text" id="set-tpl-6-s2" onfocus="activeTplInput = this"
-                class="w-full px-3 py-2 text-sm font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500" />
+              <label class="field-label" for="set-tpl-6-s2">Mapel Sesi 2</label>
+              <input type="text" id="set-tpl-6-s2" />
             </div>
           </div>
         </div>
 
-        <div class="flex justify-end">
-          <button type="button" onclick="saveMapelTemplatesFromSettings()"
-            class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold shadow-2xs transition">
-            ✓ Simpan & Terapkan Template
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="button" class="btn btn-primary" data-act="save-templates">
+            ✓ Terapkan Template ke Semua Tanggal
           </button>
         </div>
       </div>
 
-      <!-- Manajemen Daftar Anak Wali -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-5">
-        <div class="border-b border-slate-100 pb-3">
-          <h2 class="text-base sm:text-lg font-extrabold text-slate-900">
-            2. Manajemen Daftar Anak Wali (<span id="settings-student-count">0</span> Siswa)
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">
-            Tambahkan anak wali satuan atau massal (paste), serta ubah nama / nomor WhatsApp kapan saja.
-          </p>
+      <!-- 4C. Manajemen Daftar Anak Wali -->
+      <div class="card" style="display:flex;flex-direction:column;gap:14px;">
+        <div style="border-bottom:1px solid #f1f5f9;padding-bottom:10px;">
+          <h2 class="section-title">3. Manajemen Daftar Anak Wali (<span id="settings-student-count">0</span> Siswa)</h2>
+          <p class="section-desc">Tambahkan satuan maupun massal (paste banyak baris sekaligus).</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <form onsubmit="handleAddSingleStudentSettings(event)" class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-            <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Tambah 1 Anak Wali</h3>
+        <div class="two-col-grid">
+          <form id="form-settings-add-student" style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;display:flex;flex-direction:column;gap:8px;">
+            <strong style="font-size:12px;">Tambah 1 Anak Wali</strong>
             <div>
-              <label for="set-stu-name" class="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap Anak Wali *</label>
-              <input type="text" id="set-stu-name" required placeholder="Contoh: Muhammad Rizky"
-                class="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500" />
+              <label class="field-label" for="set-stu-name">Nama Lengkap Anak Wali *</label>
+              <input type="text" id="set-stu-name" required placeholder="Contoh: Muhammad Rizky" />
             </div>
             <div>
-              <label for="set-stu-phone" class="block text-xs font-semibold text-slate-600 mb-1">No. WhatsApp Siswa / Orang Tua (Opsional)</label>
-              <input type="text" id="set-stu-phone" placeholder="Contoh: 081234567890"
-                class="w-full px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500" />
+              <label class="field-label" for="set-stu-phone">No. WhatsApp Siswa / Orang Tua (Opsional)</label>
+              <input type="text" id="set-stu-phone" placeholder="Contoh: 081234567890" />
             </div>
-            <button type="submit"
-              class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold">
-              + Tambahkan Anak Wali
-            </button>
+            <button type="submit" class="btn btn-primary">+ Tambahkan Anak Wali</button>
           </form>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3 flex flex-col justify-between">
-            <div class="space-y-2">
-              <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Tambah Massal (Paste Banyak Nama)</h3>
-              <label for="set-bulk-names" class="block text-xs text-slate-500">
-                1 baris = 1 anak wali. Bisa sertakan nomor WA setelah tanda hubung (<code>Nama - 0812xxx</code>).
-              </label>
-              <textarea id="set-bulk-names" rows="4"
-                placeholder="Ahmad Fauzan - 081234567801&#10;Siti Aisyah Putri - 081234567802&#10;Budi Santoso"
-                class="w-full p-3 text-xs sm:text-sm bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500"></textarea>
+          <div style="background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;display:flex;flex-direction:column;gap:8px;justify-content:space-between;">
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <strong style="font-size:12px;">Tambah Massal (Paste Banyak Nama)</strong>
+              <span style="font-size:11px;color:var(--text-light);">1 baris = 1 anak. Format opsional: <code>Nama - 0812xxx</code></span>
+              <textarea id="set-bulk-names" rows="4" placeholder="Ahmad Fauzan - 081234567801&#10;Siti Aisyah Putri - 081234567802&#10;Budi Santoso"></textarea>
             </div>
-            <button type="button" onclick="handleBulkAddStudentsSettings()"
-              class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs sm:text-sm font-bold">
-              + Tambahkan Semua Baris
-            </button>
+            <button type="button" class="btn btn-neutral" data-act="bulk-add-students">+ Tambahkan Semua Baris</button>
           </div>
         </div>
 
-        <div id="settings-students-table" class="space-y-2"></div>
+        <div id="settings-students-table" style="display:flex;flex-direction:column;gap:8px;"></div>
       </div>
 
-      <!-- Backup, Restore & Export -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-4">
-        <div class="border-b border-slate-100 pb-3">
-          <h2 class="text-base sm:text-lg font-extrabold text-slate-900">
-            3. Ekspor Rekap, Backup (.json) & Pemulihan Data
-          </h2>
+      <!-- 4D. Backup, Restore & Export -->
+      <div class="card" style="display:flex;flex-direction:column;gap:12px;">
+        <div style="border-bottom:1px solid #f1f5f9;padding-bottom:10px;">
+          <h2 class="section-title">4. Ekspor Rekap, Backup (.json) &amp; Pemulihan Data</h2>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <button type="button" onclick="exportSummaryWorkbook()"
-            class="p-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 text-left space-y-1">
-            <p class="text-xs sm:text-sm font-extrabold">Export Rekap (.xlsx / .csv)</p>
-            <p class="text-[11px] text-emerald-700">Unduh laporan lengkap anak wali</p>
-          </button>
-
-          <button type="button" onclick="downloadBackupJSON()"
-            class="p-3.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 text-left space-y-1">
-            <p class="text-xs sm:text-sm font-extrabold">Simpan & Backup (.json)</p>
-            <p class="text-[11px] text-indigo-700">Unduh seluruh database aplikasi</p>
-          </button>
-
-          <label class="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-900 border border-slate-200 text-left space-y-1 cursor-pointer">
-            <p class="text-xs sm:text-sm font-extrabold">Restore Data (.json)</p>
-            <p class="text-[11px] text-slate-500">Muat ulang dari file backup .json</p>
-            <input type="file" accept=".json" onchange="restoreBackupJSON(event)" class="hidden" />
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <button type="button" class="btn btn-emerald" data-act="export-rekap">Export Rekap (.csv)</button>
+          <button type="button" class="btn btn-primary-soft" data-act="backup-json">Backup Data (.json)</button>
+          <label class="btn btn-neutral" style="cursor:pointer;">
+            Restore Data (.json)
+            <input type="file" id="restore-json-input" accept=".json" class="hidden" />
           </label>
-
-          <button type="button" onclick="promptLoadDemoData()"
-            class="p-3.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-left space-y-1">
-            <p class="text-xs sm:text-sm font-extrabold">Muat Data Contoh</p>
-            <p class="text-[11px] text-amber-700">Isi simulasi 3 anak wali & presensi</p>
-          </button>
-        </div>
-
-        <div class="pt-2 flex justify-end">
-          <button type="button" onclick="promptClearAllData()"
-            class="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold">
-            Kosongkan Semua Data Siswa & Presensi
-          </button>
+          <button type="button" class="btn btn-amber-soft" data-act="prompt-load-demo">Muat Data Contoh</button>
+          <button type="button" class="btn btn-rose-soft" data-act="prompt-clear-all">Kosongkan Semua Data</button>
         </div>
       </div>
     </section>
 
   </main>
 
-  <!-- ==================== FOOTER ==================== -->
-  <footer class="border-t border-slate-200 bg-white mt-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-      <p>Dashboard & Sistem Presensi Otomatis Anak Wali • Selasa, Kamis, Sabtu (Sep–Des)</p>
-      <p>Self-Healing Storage • Surgical DOM Update (60fps)</p>
-    </div>
-  </footer>
-
   <!-- ==================== CUSTOM MODAL DIALOG ==================== -->
-  <div id="app-modal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-2xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl border border-slate-200 space-y-4 animate-fade-in">
-      <div class="flex items-start justify-between gap-3">
-        <h3 id="app-modal-title" class="text-base sm:text-lg font-extrabold text-slate-900">Konfirmasi</h3>
-        <button type="button" onclick="closeAppModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+  <div id="app-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <h3 id="app-modal-title" style="margin:0;font-size:16px;font-weight:800;">Konfirmasi</h3>
+        <button type="button" class="btn btn-sm btn-neutral" data-act="close-modal">✕</button>
       </div>
-      <div id="app-modal-body" class="text-sm text-slate-600 space-y-3"></div>
-      <div id="app-modal-actions" class="flex flex-wrap items-center justify-end gap-2 pt-2"></div>
+      <div id="app-modal-body" style="font-size:13px;color:var(--text-muted);line-height:1.5;"></div>
+      <div id="app-modal-actions" style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding-top:4px;"></div>
     </div>
   </div>
 
   <!-- ==================== TOAST NOTIFICATION STACK ==================== -->
-  <div id="toast-stack" class="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex flex-col items-end gap-2 pointer-events-none"></div>
+  <div id="toast-stack" class="toast-stack"></div>
 
-  <!-- ==================== VANILLA JAVASCRIPT ENGINE ==================== -->
+  <!-- ==================== PURE VANILLA JAVASCRIPT ENGINE ==================== -->
   <script>
-    const STORAGE_KEY = 'presensi_wali_unified_sep_des_v5';
-    const ALL_KNOWN_KEYS = [
+    'use strict';
+
+    const STORAGE_KEY = 'PRESENSI_WALI_APP_V5';
+    const LEGACY_KEYS = [
+      'PRESENSI_WALI_APP_V5',
       'presensi_wali_unified_sep_des_v5',
       'presensi_wali_unified_sep_des_v4',
       'presensi_wali_unified_sep_des_v3',
@@ -687,102 +1334,103 @@
 
     /**
      * =========================================================================
-     * 1. SELF-HEALING SAFE STORAGE WITH 150MS DEBOUNCE & LIFECYCLE FLUSH
+     * 1. GLOBAL ERROR BOUNDARY & SAFE STORAGE (ANTI-BLANK & ANTI-CRASH)
      * =========================================================================
      */
-    const safeStorage = (() => {
-      let memoryStore = {};
-      let persistentAvailable = true;
+    function triggerCrashBanner(msg) {
+      const banner = document.getElementById('crash-recovery-banner');
+      const textEl = document.getElementById('crash-recovery-msg');
+      if (banner && textEl) {
+        textEl.textContent = String(msg || 'Terjadi gangguan penyimpanan. Klik Pulihkan Sekarang.');
+        banner.classList.remove('hidden');
+      }
+    }
 
+    window.onerror = function (message, source, lineno) {
+      triggerCrashBanner(`Error (${lineno || 0}): ${message}`);
+      return false;
+    };
+
+    window.addEventListener('unhandledrejection', function (event) {
+      const reason = event && event.reason ? (event.reason.message || String(event.reason)) : 'Promise rejected';
+      triggerCrashBanner(reason);
+    });
+
+    const safeStorage = (function () {
+      const mem = {};
+      let ok = true;
       try {
-        const probe = '__presensi_probe_v5__';
+        const probe = '__pw_probe_v5__';
         window.localStorage.setItem(probe, '1');
         window.localStorage.removeItem(probe);
       } catch (e) {
-        persistentAvailable = false;
+        ok = false;
       }
-
       return {
-        isPersistent() {
-          return persistentAvailable;
-        },
-        getItem(key) {
-          if (persistentAvailable) {
-            try {
-              return window.localStorage.getItem(key);
-            } catch (e) {
-              persistentAvailable = false;
-            }
+        isPersistent: function () { return ok; },
+        getItem: function (k) {
+          if (ok) {
+            try { return window.localStorage.getItem(k); } catch (e) { ok = false; }
           }
-          return Object.prototype.hasOwnProperty.call(memoryStore, key) ? memoryStore[key] : null;
+          return Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null;
         },
-        setItem(key, value) {
-          memoryStore[key] = value;
-          if (persistentAvailable) {
+        setItem: function (k, v) {
+          mem[k] = v;
+          if (ok) {
             try {
-              window.localStorage.setItem(key, value);
+              window.localStorage.setItem(k, v);
               return true;
             } catch (e) {
-              persistentAvailable = false;
+              ok = false;
             }
           }
           return false;
         },
-        removeItem(key) {
-          delete memoryStore[key];
-          if (persistentAvailable) {
-            try {
-              window.localStorage.removeItem(key);
-            } catch (e) {}
+        removeItem: function (k) {
+          delete mem[k];
+          if (ok) {
+            try { window.localStorage.removeItem(k); } catch (e) {}
           }
         }
       };
     })();
 
-    // State Global Aplikasi
+    /**
+     * =========================================================================
+     * 2. APPLICATION STATE, SANITIZATION & 80MS DEBOUNCED PERSISTENCE
+     * =========================================================================
+     */
     let appState = null;
     let scheduleList = [];
-    let currentTab = 'rekap'; // 'rekap' | 'single' | 'class' | 'upload' | 'settings'
-    let saveDebounceTimer = null;
-    let hasPendingSave = false;
+    let scheduleByDateMap = new Map();
+    let currentTab = 'rekap'; // 'rekap' | 'single' | 'class' | 'settings'
+    let saveTimer = null;
+    let pendingSave = false;
 
-    // State UI Tab 2 (Kartu 1 Anak)
+    // UI States
     let activeSingleStudentId = '';
     let singleMonthFilter = 'all';
     let singleStatusFilter = 'all';
     let singleInlineEditKey = null;
-
-    // State UI Tab 3 (Absen Kelas Per Tanggal)
     let activeClassDateStr = '';
+    let activeTplInputId = 'set-tpl-2-s1';
 
-    // State UI Tab 4 (Upload Spreadsheet)
-    let uploadedWorkbook = null;
-    let uploadedFileName = '';
-    let uploadedSheetNames = [];
-    let activeUploadSheetName = '';
-    let uploadHeaderRowIndex = 0;
+    // Spreadsheet Upload States
+    let uploadSheetsData = {}; // { sheetName: rows[][] }
+    let uploadSheetNames = [];
+    let activeUploadSheet = '';
+    let uploadFileName = '';
+    let uploadHeaderIdx = 0;
     let uploadHeaders = [];
-    let uploadRawRows = [];
-    let uploadColumnMap = {
-      layoutMode: 'horizontal',
-      dateCol: -1,
-      pekanCol: -1,
-      hariCol: -1,
-      sesi1Col: -1,
-      sesi2Col: -1,
-      sesiCol: -1,
-      mapelSingleCol: -1
-    };
-    let parsedSchedulePreview = [];
+    let uploadColMap = { dateCol: -1, pekanCol: -1, hariCol: -1, s1Col: -1, s2Col: -1 };
+    let parsedUploadPreview = [];
 
-    // State UI Tab 5 (Settings)
-    let activeTplInput = null;
-
-    function buildDemoState(year = 2026) {
+    function buildDemoState(year) {
+      const y = Number(year) || 2026;
       return {
         version: 5,
         isDemo: true,
-        year,
+        year: y,
         templates: {
           2: { s1: 'Matematika Wajib', s2: 'Fisika' },
           4: { s1: 'Kimia', s2: 'Biologi' },
@@ -795,153 +1443,120 @@
         ],
         scheduleOverrides: {},
         attendance: {
-          'stu_1': {
-            [`${year}-09-01`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Alpha', susulan: false } },
-            [`${year}-09-03`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } },
-            [`${year}-09-05`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } },
-            [`${year}-09-08`]: { s1: { status: 'Izin', susulan: false }, s2: { status: 'Hadir', susulan: false } },
-            [`${year}-09-10`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Sakit', susulan: true } }
+          stu_1: {
+            [`${y}-09-01`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Alpha', susulan: false } },
+            [`${y}-09-03`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } },
+            [`${y}-09-05`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } },
+            [`${y}-09-08`]: { s1: { status: 'Izin', susulan: false }, s2: { status: 'Hadir', susulan: false } },
+            [`${y}-09-10`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Sakit', susulan: true } }
           },
-          'stu_2': {
-            [`${year}-09-01`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } },
-            [`${year}-09-03`]: { s1: { status: 'Sakit', susulan: false }, s2: { status: 'Sakit', susulan: false } },
-            [`${year}-09-05`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } }
+          stu_2: {
+            [`${y}-09-01`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } },
+            [`${y}-09-03`]: { s1: { status: 'Sakit', susulan: false }, s2: { status: 'Sakit', susulan: false } }
           },
-          'stu_3': {
-            [`${year}-09-01`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } },
-            [`${year}-09-03`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } },
-            [`${year}-09-05`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } },
-            [`${year}-09-08`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } }
+          stu_3: {
+            [`${y}-09-01`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } },
+            [`${y}-09-03`]: { s1: { status: 'Hadir', susulan: false }, s2: { status: 'Hadir', susulan: false } }
           }
         }
       };
     }
 
-    /**
-     * Migrasi & Sanitasi Total Data Lama (Anti-Crash / Anti-Blank)
-     */
-    function sanitizeState(rawInput) {
-      const fallback = buildDemoState(2026);
-      if (!rawInput || typeof rawInput !== 'object') {
-        return fallback;
-      }
+    function sanitizeState(raw) {
+      if (!raw || typeof raw !== 'object') return buildDemoState(2026);
+      const yr = Number(raw.year);
+      const validYear = yr >= 2020 && yr <= 2035 ? yr : 2026;
 
-      const rawYear = Number(rawInput.year);
-      const validYear = rawYear >= 2020 && rawYear <= 2035 ? rawYear : 2026;
-
-      // 1. Sanitasi templates (Selasa=2, Kamis=4, Sabtu=6)
       const defaultTpl = {
         2: { s1: 'Matematika Wajib', s2: 'Fisika' },
         4: { s1: 'Kimia', s2: 'Biologi' },
         6: { s1: 'Bahasa Inggris', s2: 'Penalaran Umum' }
       };
-      const srcTpl = rawInput.templates && typeof rawInput.templates === 'object' ? rawInput.templates : {};
-      const dayAlias = { 2: ['2', 'Selasa', 'selasa'], 4: ['4', 'Kamis', 'kamis'], 6: ['6', 'Sabtu', 'sabtu'] };
+      const srcTpl = raw.templates && typeof raw.templates === 'object' ? raw.templates : {};
       const cleanTemplates = {};
-      [2, 4, 6].forEach(dow => {
-        let found = null;
-        for (const k of dayAlias[dow]) {
-          if (srcTpl[k] && typeof srcTpl[k] === 'object') {
-            found = srcTpl[k];
-            break;
-          }
-        }
+      [2, 4, 6].forEach(function (dow) {
+        const entry = srcTpl[dow] || srcTpl[String(dow)] || {};
         cleanTemplates[dow] = {
-          s1: String((found && (found.s1 || found.sesi1)) || defaultTpl[dow].s1).trim() || defaultTpl[dow].s1,
-          s2: String((found && (found.s2 || found.sesi2)) || defaultTpl[dow].s2).trim() || defaultTpl[dow].s2
+          s1: String(entry.s1 || defaultTpl[dow].s1).trim() || defaultTpl[dow].s1,
+          s2: String(entry.s2 || defaultTpl[dow].s2).trim() || defaultTpl[dow].s2
         };
       });
 
-      // 2. Sanitasi students (mendukung string array maupun object lama)
-      const rawStudents = Array.isArray(rawInput.students) ? rawInput.students : [];
+      const rawStudents = Array.isArray(raw.students) ? raw.students : [];
       const cleanStudents = [];
-      const nameToIdMap = {};
       const usedIds = new Set();
+      const nameToId = {};
 
-      rawStudents.forEach((item, idx) => {
+      rawStudents.forEach(function (item, idx) {
         let id = '';
         let name = '';
         let phone = '';
-
         if (typeof item === 'string') {
           const parts = item.split(/\s+-\s+/);
           name = (parts[0] || '').trim();
           phone = parts[1] ? normalizePhoneID(parts[1]) : '';
-          id = `stu_mig_${idx + 1}`;
+          id = 'stu_' + (idx + 1);
         } else if (item && typeof item === 'object') {
-          name = String(item.name || item.nama || item.fullName || '').trim();
-          phone = normalizePhoneID(String(item.phone || item.wa || item.no_wa || item.telp || ''));
-          id = String(item.id || `stu_mig_${idx + 1}`).trim();
+          name = String(item.name || item.nama || '').trim();
+          phone = normalizePhoneID(String(item.phone || item.wa || ''));
+          id = String(item.id || 'stu_' + (idx + 1)).trim();
         }
-
         if (!name) return;
         while (!id || usedIds.has(id)) {
-          id = `stu_${idx + 1}_${Math.random().toString(36).slice(2, 6)}`;
+          id = 'stu_' + (idx + 1) + '_' + Math.random().toString(36).slice(2, 6);
         }
         usedIds.add(id);
-        cleanStudents.push({ id, name, phone });
-        nameToIdMap[name.toLowerCase()] = id;
+        cleanStudents.push({ id: id, name: name, phone: phone });
+        nameToId[name.toLowerCase()] = id;
       });
 
-      // 3. Sanitasi scheduleOverrides
       const cleanOverrides = {};
-      if (rawInput.scheduleOverrides && typeof rawInput.scheduleOverrides === 'object' && !Array.isArray(rawInput.scheduleOverrides)) {
-        Object.keys(rawInput.scheduleOverrides).forEach(dateKey => {
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
-          const ov = rawInput.scheduleOverrides[dateKey];
+      if (raw.scheduleOverrides && typeof raw.scheduleOverrides === 'object' && !Array.isArray(raw.scheduleOverrides)) {
+        Object.keys(raw.scheduleOverrides).forEach(function (dk) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(dk)) return;
+          const ov = raw.scheduleOverrides[dk];
           if (!ov || typeof ov !== 'object') return;
-          const s1 = String(ov.s1 || ov.sesi1 || '').trim();
-          const s2 = String(ov.s2 || ov.sesi2 || '').trim();
-          if (s1 || s2) {
-            cleanOverrides[dateKey] = { s1, s2 };
-          }
+          const s1 = String(ov.s1 || '').trim();
+          const s2 = String(ov.s2 || '').trim();
+          if (s1 || s2) cleanOverrides[dk] = { s1: s1, s2: s2 };
         });
       }
 
-      // 4. Sanitasi attendance (mendukung key ID maupun key Nama, serta format string/object)
       const cleanAttendance = {};
-      const validStatuses = new Set(['Hadir', 'Izin', 'Sakit', 'Alpha']);
-      const normalizeEntry = (val) => {
+      const validSt = new Set(['Hadir', 'Izin', 'Sakit', 'Alpha']);
+      const normSes = function (val) {
         if (!val) return { status: '', susulan: false };
         if (typeof val === 'string') {
-          const st = validStatuses.has(val) ? val : '';
-          return { status: st, susulan: false };
+          return { status: validSt.has(val) ? val : '', susulan: false };
         }
         if (typeof val === 'object') {
-          const rawSt = String(val.status || '').trim();
-          const st = validStatuses.has(rawSt) ? rawSt : '';
+          const st = validSt.has(val.status) ? val.status : '';
           return { status: st, susulan: st && st !== 'Hadir' ? Boolean(val.susulan) : false };
         }
         return { status: '', susulan: false };
       };
 
-      const srcAtt = rawInput.attendance && typeof rawInput.attendance === 'object' && !Array.isArray(rawInput.attendance)
-        ? rawInput.attendance
-        : {};
-
-      Object.keys(srcAtt).forEach(rawKey => {
-        const targetStuId = usedIds.has(rawKey) ? rawKey : (nameToIdMap[rawKey.trim().toLowerCase()] || '');
-        if (!targetStuId) return;
-
-        const studentDates = srcAtt[rawKey];
-        if (!studentDates || typeof studentDates !== 'object' || Array.isArray(studentDates)) return;
-
-        if (!cleanAttendance[targetStuId]) cleanAttendance[targetStuId] = {};
-
-        Object.keys(studentDates).forEach(dateKey => {
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
-          const dayObj = studentDates[dateKey];
-          if (!dayObj || typeof dayObj !== 'object') return;
-
-          const s1 = normalizeEntry(dayObj.s1 !== undefined ? dayObj.s1 : dayObj.sesi1);
-          const s2 = normalizeEntry(dayObj.s2 !== undefined ? dayObj.s2 : dayObj.sesi2);
-          cleanAttendance[targetStuId][dateKey] = { s1, s2 };
+      const srcAtt = raw.attendance && typeof raw.attendance === 'object' && !Array.isArray(raw.attendance) ? raw.attendance : {};
+      Object.keys(srcAtt).forEach(function (rawSid) {
+        const sid = usedIds.has(rawSid) ? rawSid : (nameToId[rawSid.trim().toLowerCase()] || '');
+        if (!sid) return;
+        const datesObj = srcAtt[rawSid];
+        if (!datesObj || typeof datesObj !== 'object' || Array.isArray(datesObj)) return;
+        cleanAttendance[sid] = {};
+        Object.keys(datesObj).forEach(function (dk) {
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(dk)) return;
+          const dayRec = datesObj[dk];
+          if (!dayRec || typeof dayRec !== 'object') return;
+          cleanAttendance[sid][dk] = {
+            s1: normSes(dayRec.s1),
+            s2: normSes(dayRec.s2)
+          };
         });
       });
 
       return {
         version: 5,
-        isDemo: Boolean(rawInput.isDemo),
+        isDemo: Boolean(raw.isDemo),
         year: validYear,
         templates: cleanTemplates,
         students: cleanStudents,
@@ -952,273 +1567,93 @@
 
     function loadAppState() {
       let rawStr = null;
-      for (const k of ALL_KNOWN_KEYS) {
-        const found = safeStorage.getItem(k);
-        if (found) {
-          rawStr = found;
-          break;
-        }
+      for (let i = 0; i < LEGACY_KEYS.length; i++) {
+        const val = safeStorage.getItem(LEGACY_KEYS[i]);
+        if (val) { rawStr = val; break; }
       }
-
       if (!rawStr) {
         const fresh = buildDemoState(2026);
         safeStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
         return fresh;
       }
-
       try {
-        const parsed = JSON.parse(rawStr);
-        const sanitized = sanitizeState(parsed);
+        const sanitized = sanitizeState(JSON.parse(rawStr));
         safeStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
         return sanitized;
-      } catch (err) {
-        console.error('Corrupt storage JSON, resetting safely:', err);
+      } catch (e) {
         const fresh = buildDemoState(2026);
         safeStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
         return fresh;
       }
     }
 
-    /**
-     * Debounced Save (150ms) agar tap cepat di HP 0ms lag, dengan flush otomatis saat pindah tab/tutup
-     */
-    function scheduleSaveAppState(immediate = false) {
-      hasPendingSave = true;
-      updateSyncBadgeText('Menyimpan...', false);
+    function scheduleSave(immediate) {
+      pendingSave = true;
+      const statusEl = document.getElementById('sync-status-text');
+      if (statusEl) statusEl.textContent = 'Menyimpan...';
 
-      if (saveDebounceTimer) {
-        clearTimeout(saveDebounceTimer);
-        saveDebounceTimer = null;
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
       }
-
       if (immediate) {
-        flushSaveAppState();
+        flushSave();
       } else {
-        saveDebounceTimer = setTimeout(flushSaveAppState, 150);
+        saveTimer = setTimeout(flushSave, 80);
       }
     }
 
-    function flushSaveAppState() {
-      if (saveDebounceTimer) {
-        clearTimeout(saveDebounceTimer);
-        saveDebounceTimer = null;
+    function flushSave() {
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
       }
       if (!appState) return;
       const persisted = safeStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-      hasPendingSave = false;
+      pendingSave = false;
       const now = new Date();
-      const jam = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      updateSyncBadgeText(persisted ? `✓ Tersimpan (${jam})` : `✓ Tersimpan Sesi (${jam})`, true);
-    }
-
-    function updateSyncBadgeText(label, isSaved) {
-      document.querySelectorAll('.sync-label-text').forEach(el => {
-        el.textContent = label;
-      });
-    }
-
-    window.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden' && hasPendingSave) {
-        flushSaveAppState();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const statusEl = document.getElementById('sync-status-text');
+      if (statusEl) {
+        statusEl.textContent = persisted ? `✓ Tersimpan (${hh}:${mm})` : `✓ Memori (${hh}:${mm})`;
       }
+    }
+
+    window.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden' && pendingSave) flushSave();
     });
-    window.addEventListener('pagehide', () => {
-      if (hasPendingSave) flushSaveAppState();
+    window.addEventListener('pagehide', function () {
+      if (pendingSave) flushSave();
     });
 
-    function emergencyResetStorage() {
-      ALL_KNOWN_KEYS.forEach(k => safeStorage.removeItem(k));
-      appState = buildDemoState(2026);
-      flushSaveAppState();
-      document.getElementById('crash-recovery-banner').classList.add('hidden');
-      generateSchedule();
-      renderCurrentView();
-      showToast('Aplikasi berhasil dipulihkan!', 'success');
-    }
-
-    function ensureAttendanceSlot(studentId, dateKey) {
-      if (!appState.attendance[studentId]) {
-        appState.attendance[studentId] = {};
-      }
-      const existing = appState.attendance[studentId][dateKey];
-      if (!existing || typeof existing !== 'object') {
-        appState.attendance[studentId][dateKey] = {
+    function ensureAttendanceSlot(sid, dk) {
+      if (!appState.attendance[sid]) appState.attendance[sid] = {};
+      const cur = appState.attendance[sid][dk];
+      if (!cur || typeof cur !== 'object') {
+        appState.attendance[sid][dk] = {
           s1: { status: '', susulan: false },
           s2: { status: '', susulan: false }
         };
       } else {
-        appState.attendance[studentId][dateKey] = {
-          s1: existing.s1
-            ? { status: existing.s1.status || '', susulan: Boolean(existing.s1.susulan) }
-            : { status: '', susulan: false },
-          s2: existing.s2
-            ? { status: existing.s2.status || '', susulan: Boolean(existing.s2.susulan) }
-            : { status: '', susulan: false }
+        appState.attendance[sid][dk] = {
+          s1: cur.s1 ? { status: cur.s1.status || '', susulan: Boolean(cur.s1.susulan) } : { status: '', susulan: false },
+          s2: cur.s2 ? { status: cur.s2.status || '', susulan: Boolean(cur.s2.susulan) } : { status: '', susulan: false }
         };
       }
-      return appState.attendance[studentId][dateKey];
+      return appState.attendance[sid][dk];
     }
 
     /**
      * =========================================================================
-     * 2. SURGICAL DOM UPDATE (NOL LAG SAAT KLIK HADIR / IZIN / SAKIT / ALPHA)
+     * 3. JADWAL OTOMATIS SELASA, KAMIS, SABTU (1 SEP – 31 DES, JAM 12:00 LOKAL)
      * =========================================================================
      */
-    function handleSessionStatusClick(studentId, dateKey, sessionKey, clickedStatus) {
-      if (!studentId || !dateKey || (sessionKey !== 's1' && sessionKey !== 's2')) return;
-      const slot = ensureAttendanceSlot(studentId, dateKey);
-
-      const currentStatus = slot[sessionKey].status;
-      const nextStatus = currentStatus === clickedStatus ? '' : clickedStatus;
-      const keepSusulan = nextStatus && nextStatus !== 'Hadir' ? slot[sessionKey].susulan : false;
-
-      slot[sessionKey] = {
-        status: nextStatus,
-        susulan: keepSusulan
-      };
-
-      scheduleSaveAppState(false);
-
-      // Surgical DOM patch tanpa me-render ulang seluruh list!
-      if (currentTab === 'single') {
-        patchSingleMeetingRowDOM(studentId, dateKey);
-        updateGlobalMissedBadgeOnly();
-      } else if (currentTab === 'class') {
-        patchClassStudentRowDOM(studentId, dateKey);
-        updateGlobalMissedBadgeOnly();
-      } else {
-        renderCurrentView();
-      }
-    }
-
-    function handleToggleSusulan(studentId, dateKey, sessionKey) {
-      if (!studentId || !dateKey || (sessionKey !== 's1' && sessionKey !== 's2')) return;
-      const slot = ensureAttendanceSlot(studentId, dateKey);
-      const entry = slot[sessionKey];
-      if (!entry.status || entry.status === 'Hadir') return;
-
-      slot[sessionKey] = {
-        status: entry.status,
-        susulan: !entry.susulan
-      };
-
-      scheduleSaveAppState(false);
-
-      if (currentTab === 'single') {
-        patchSingleMeetingRowDOM(studentId, dateKey);
-        updateGlobalMissedBadgeOnly();
-      } else if (currentTab === 'class') {
-        patchClassStudentRowDOM(studentId, dateKey);
-        updateGlobalMissedBadgeOnly();
-      } else {
-        renderCurrentView();
-      }
-
-      showToast(
-        slot[sessionKey].susulan ? 'Ditandai ✓ Sudah Susulan.' : 'Status susulan dibatalkan.',
-        'info'
-      );
-    }
-
-    function handleMarkFullDayPresent(studentId, dateKey) {
-      if (!studentId || !dateKey) return;
-      const slot = ensureAttendanceSlot(studentId, dateKey);
-      slot.s1 = { status: 'Hadir', susulan: false };
-      slot.s2 = { status: 'Hadir', susulan: false };
-
-      scheduleSaveAppState(false);
-
-      if (currentTab === 'single') {
-        patchSingleMeetingRowDOM(studentId, dateKey);
-        updateGlobalMissedBadgeOnly();
-      } else if (currentTab === 'class') {
-        patchClassStudentRowDOM(studentId, dateKey);
-        updateGlobalMissedBadgeOnly();
-      } else {
-        renderCurrentView();
-      }
-    }
-
-    /**
-     * Memperbarui hanya 1 baris tanggal pada Tab 2 + strip ringkasan di atas (<1ms)
-     */
-    function patchSingleMeetingRowDOM(studentId, dateKey) {
-      const sched = scheduleList.find(s => s.dateStr === dateKey);
-      const rowEl = document.querySelector(`[data-meeting-row="${dateKey}"]`);
-      if (sched && rowEl) {
-        const stuAtt = appState.attendance[studentId] || {};
-        const dayRec = stuAtt[dateKey] || {};
-        const s1Entry = dayRec.s1 || { status: '', susulan: false };
-        const s2Entry = dayRec.s2 || { status: '', susulan: false };
-        const hasMissed =
-          (s1Entry.status && s1Entry.status !== 'Hadir' && !s1Entry.susulan) ||
-          (s2Entry.status && s2Entry.status !== 'Hadir' && !s2Entry.susulan);
-        const bothPresent = s1Entry.status === 'Hadir' && s2Entry.status === 'Hadir';
-
-        rowEl.className = `p-3.5 sm:p-4 ${hasMissed ? 'bg-rose-50/20' : 'bg-white'} transition space-y-3`;
-
-        const dayBtn = rowEl.querySelector(`[data-day-present-btn="${dateKey}"]`);
-        if (dayBtn) {
-          dayBtn.className = `shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-bold transition ${
-            bothPresent
-              ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-              : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
-          }`;
-        }
-
-        const box1 = rowEl.querySelector(`[data-session-box="${dateKey}__s1"]`);
-        const box2 = rowEl.querySelector(`[data-session-box="${dateKey}__s2"]`);
-        if (box1) box1.outerHTML = renderSingleSessionBox(studentId, sched, 's1', sched.s1, s1Entry, sched.isCustomS1);
-        if (box2) box2.outerHTML = renderSingleSessionBox(studentId, sched, 's2', sched.s2, s2Entry, sched.isCustomS2);
-      }
-
-      // Perbarui strip ringkasan & pil cepat tanpa menyentuh daftar pekan
-      const student = appState.students.find(s => s.id === studentId);
-      if (student) {
-        renderSingleSummaryStrip(student);
-        renderSingleStudentPills();
-      }
-    }
-
-    /**
-     * Memperbarui hanya 1 kartu siswa pada Tab 3 (<1ms)
-     */
-    function patchClassStudentRowDOM(studentId, dateKey) {
-      const sched = scheduleList.find(s => s.dateStr === dateKey);
-      const stu = appState.students.find(s => s.id === studentId);
-      const rowEl = document.querySelector(`[data-class-student-row="${studentId}"]`);
-      if (!sched || !stu || !rowEl) return;
-
-      const idx = appState.students.findIndex(s => s.id === studentId);
-      rowEl.outerHTML = buildClassStudentCardHTML(stu, idx, sched);
-    }
-
-    function updateGlobalMissedBadgeOnly() {
-      let globalMissedCount = 0;
-      appState.students.forEach(stu => {
-        const stats = computeStudentStats(stu.id, 'all');
-        globalMissedCount += stats.totalActiveMissed;
-      });
-      const badge = document.getElementById('tab-badge-missed');
-      if (badge) {
-        badge.textContent = globalMissedCount;
-        badge.className = globalMissedCount > 0
-          ? 'px-1.5 py-0.5 text-[10px] font-extrabold rounded-full bg-rose-500 text-white'
-          : 'px-1.5 py-0.5 text-[10px] font-extrabold rounded-full bg-emerald-500 text-white';
-      }
-    }
-
-    /**
-     * =========================================================================
-     * 3. GENERASI JADWAL OTOMATIS SELASA, KAMIS, SABTU (SEP – DES)
-     * =========================================================================
-     */
-    function getMondayOfWeek(dateObj) {
-      const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+    function getMondayNoon(dateObj) {
+      const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 12, 0, 0);
       const day = d.getDay();
       const diff = day === 0 ? -6 : 1 - day;
       d.setDate(d.getDate() + diff);
-      d.setHours(0, 0, 0, 0);
       return d;
     }
 
@@ -1241,67 +1676,67 @@
       const templates = appState.templates || {};
       const overrides = appState.scheduleOverrides || {};
 
-      const septFirst = new Date(year, 8, 1);
-      const week1Monday = getMondayOfWeek(septFirst);
+      const sept1Noon = new Date(year, 8, 1, 12, 0, 0);
+      const week1Monday = getMondayNoon(sept1Noon);
       const msPerWeek = 7 * 24 * 60 * 60 * 1000;
 
       const list = [];
+      const mapByDate = new Map();
       let seq = 0;
 
       for (let monthIdx = 8; monthIdx <= 11; monthIdx++) {
         const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
         for (let day = 1; day <= daysInMonth; day++) {
-          const dateObj = new Date(year, monthIdx, day);
+          const dateObj = new Date(year, monthIdx, day, 12, 0, 0);
           const dow = dateObj.getDay();
-
           if (dow === 2 || dow === 4 || dow === 6) {
             seq++;
-            const monday = getMondayOfWeek(dateObj);
+            const monday = getMondayNoon(dateObj);
             const pekan = Math.round((monday.getTime() - week1Monday.getTime()) / msPerWeek) + 1;
             const dateStr = formatYYYYMMDD(dateObj);
             const tpl = templates[dow] || { s1: 'Sesi 1', s2: 'Sesi 2' };
             const ov = overrides[dateStr] || {};
 
-            const s1Subject = ov.s1 || tpl.s1;
-            const s2Subject = ov.s2 || tpl.s2;
-
-            list.push({
-              seq,
-              dateStr,
-              dateObj,
-              monthIdx,
+            const item = {
+              seq: seq,
+              dateStr: dateStr,
+              monthIdx: monthIdx,
               monthName: MONTH_NAMES_ID[monthIdx],
-              dow,
+              dow: dow,
               dayName: DAY_NAMES_ID[dow],
               shortDate: formatShortDateID(dateObj),
-              pekan,
+              pekan: pekan,
               pekanLabel: `Pekan ${pekan}`,
-              s1: s1Subject,
-              s2: s2Subject,
+              s1: ov.s1 || tpl.s1,
+              s2: ov.s2 || tpl.s2,
               isCustomS1: Boolean(ov.s1 && ov.s1 !== tpl.s1),
               isCustomS2: Boolean(ov.s2 && ov.s2 !== tpl.s2)
-            });
+            };
+            list.push(item);
+            mapByDate.set(dateStr, item);
           }
         }
       }
 
       scheduleList = list;
+      scheduleByDateMap = mapByDate;
 
       const maxPekan = list.length > 0 ? list[list.length - 1].pekan : 18;
       document.getElementById('header-schedule-info').textContent =
         `Selasa, Kamis, Sabtu • 1 Sep – 31 Des ${year} (Pekan 1–${maxPekan} • ${list.length} Pertemuan)`;
       document.getElementById('year-selector').value = String(year);
 
+      // Update dropdown filter pekan di Tab 1
       const pekanSelect = document.getElementById('rekap-pekan-filter');
-      const prevPekanVal = pekanSelect.value || 'all';
-      let pekanOpts = `<option value="all">Semua Pekan (Pekan 1–${maxPekan})</option>`;
+      const prevVal = pekanSelect.value || 'all';
+      let opts = `<option value="all">Semua Pekan (1–${maxPekan})</option>`;
       for (let p = 1; p <= maxPekan; p++) {
-        pekanOpts += `<option value="${p}">Pekan ${p}</option>`;
+        opts += `<option value="${p}">Pekan ${p}</option>`;
       }
-      pekanSelect.innerHTML = pekanOpts;
-      pekanSelect.value = prevPekanVal;
+      pekanSelect.innerHTML = opts;
+      pekanSelect.value = prevVal;
 
-      if (!activeClassDateStr || !list.some(s => s.dateStr === activeClassDateStr)) {
+      if (!activeClassDateStr || !mapByDate.has(activeClassDateStr)) {
         activeClassDateStr = findNearestScheduleDateStr();
       }
     }
@@ -1309,482 +1744,511 @@
     function findNearestScheduleDateStr() {
       if (scheduleList.length === 0) return '';
       const todayStr = formatYYYYMMDD(new Date());
-      const upcoming = scheduleList.find(s => s.dateStr >= todayStr);
-      return upcoming ? upcoming.dateStr : scheduleList[0].dateStr;
-    }
-
-    function handleYearChange() {
-      appState.year = Number(document.getElementById('year-selector').value);
-      scheduleSaveAppState(true);
-      generateSchedule();
-      if (uploadedWorkbook && activeUploadSheetName) {
-        parseActiveUploadSheet();
-      }
-      renderCurrentView();
-      showToast(`Tahun jadwal diperbarui ke ${appState.year}.`, 'info');
+      const found = scheduleList.find(function (s) { return s.dateStr >= todayStr; });
+      return found ? found.dateStr : scheduleList[0].dateStr;
     }
 
     /**
      * =========================================================================
-     * 4. NAVIGASI TAB & KALKULASI METRIK PRESENSI
+     * 4. SURGICAL DOM UPDATE (INSTAN <1MS TANPA RE-RENDER 52 PERTEMUAN)
      * =========================================================================
      */
-    function switchTab(tabName) {
-      currentTab = tabName;
-      const tabs = ['rekap', 'single', 'class', 'upload', 'settings'];
+    function handleSessionStatusClick(sid, dk, ses, val) {
+      if (!sid || !dk || (ses !== 's1' && ses !== 's2')) return;
+      const slot = ensureAttendanceSlot(sid, dk);
+      const nextStatus = slot[ses].status === val ? '' : val;
+      const nextSusulan = nextStatus && nextStatus !== 'Hadir' ? slot[ses].susulan : false;
 
-      tabs.forEach(t => {
-        const panel = document.getElementById(`panel-${t}`);
-        const btn = document.getElementById(`tab-btn-${t}`);
-        if (!panel || !btn) return;
-        if (t === tabName) {
-          panel.classList.remove('hidden');
-          btn.className = 'shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow-2xs transition';
-        } else {
-          panel.classList.add('hidden');
-          btn.className = 'shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition';
+      slot[ses] = { status: nextStatus, susulan: nextSusulan };
+      scheduleSave(false);
+
+      if (currentTab === 'single') {
+        patchSingleMeetingRow(sid, dk);
+        updateGlobalMissedBadge();
+      } else if (currentTab === 'class') {
+        patchClassStudentCard(sid, dk);
+        updateGlobalMissedBadge();
+      } else {
+        renderCurrentTab();
+      }
+    }
+
+    function handleToggleSusulanClick(sid, dk, ses) {
+      if (!sid || !dk || (ses !== 's1' && ses !== 's2')) return;
+      const slot = ensureAttendanceSlot(sid, dk);
+      if (!slot[ses].status || slot[ses].status === 'Hadir') return;
+      slot[ses].susulan = !slot[ses].susulan;
+      scheduleSave(false);
+
+      if (currentTab === 'single') {
+        patchSingleMeetingRow(sid, dk);
+        updateGlobalMissedBadge();
+      } else if (currentTab === 'class') {
+        patchClassStudentCard(sid, dk);
+        updateGlobalMissedBadge();
+      } else {
+        renderCurrentTab();
+      }
+      showToast(slot[ses].susulan ? 'Ditandai ✓ Sudah Susulan' : 'Status susulan dibatalkan', 'info');
+    }
+
+    function handleDayPresentClick(sid, dk) {
+      if (!sid || !dk) return;
+      const slot = ensureAttendanceSlot(sid, dk);
+      slot.s1 = { status: 'Hadir', susulan: false };
+      slot.s2 = { status: 'Hadir', susulan: false };
+      scheduleSave(false);
+
+      if (currentTab === 'single') {
+        patchSingleMeetingRow(sid, dk);
+        updateGlobalMissedBadge();
+      } else if (currentTab === 'class') {
+        patchClassStudentCard(sid, dk);
+        updateGlobalMissedBadge();
+      } else {
+        renderCurrentTab();
+      }
+    }
+
+    function patchSingleMeetingRow(sid, dk) {
+      const sched = scheduleByDateMap.get(dk);
+      const rowEl = document.querySelector(`[data-meeting-row="${dk}"]`);
+      if (sched && rowEl) {
+        const slot = ensureAttendanceSlot(sid, dk);
+        const hasMissed =
+          (slot.s1.status && slot.s1.status !== 'Hadir' && !slot.s1.susulan) ||
+          (slot.s2.status && slot.s2.status !== 'Hadir' && !slot.s2.susulan);
+        const bothPresent = slot.s1.status === 'Hadir' && slot.s2.status === 'Hadir';
+
+        rowEl.className = hasMissed ? 'meeting-row row-alert' : 'meeting-row';
+
+        const dayBtn = rowEl.querySelector('[data-act="day-present"]');
+        if (dayBtn) {
+          dayBtn.className = bothPresent ? 'btn btn-sm btn-emerald' : 'btn btn-sm btn-emerald-soft';
         }
+
+        const box1 = rowEl.querySelector(`[data-session-box="${dk}__s1"]`);
+        const box2 = rowEl.querySelector(`[data-session-box="${dk}__s2"]`);
+        if (box1) box1.outerHTML = buildSingleSessionBoxHTML(sid, sched, 's1', sched.s1, slot.s1, sched.isCustomS1);
+        if (box2) box2.outerHTML = buildSingleSessionBoxHTML(sid, sched, 's2', sched.s2, slot.s2, sched.isCustomS2);
+      }
+
+      const stu = appState.students.find(function (s) { return s.id === sid; });
+      if (stu) {
+        renderSingleSummaryStrip(stu);
+        renderSingleStudentPills();
+      }
+    }
+
+    function patchClassStudentCard(sid, dk) {
+      const sched = scheduleByDateMap.get(dk);
+      const idx = appState.students.findIndex(function (s) { return s.id === sid; });
+      const cardEl = document.querySelector(`[data-class-row="${sid}"]`);
+      if (sched && idx !== -1 && cardEl) {
+        cardEl.outerHTML = buildClassStudentCardHTML(appState.students[idx], idx, sched);
+      }
+    }
+
+    function updateGlobalMissedBadge() {
+      let total = 0;
+      appState.students.forEach(function (stu) {
+        total += computeStudentStats(stu.id, 'all').totalActiveMissed;
       });
-
-      renderCurrentView();
+      const badge = document.getElementById('tab-badge-missed');
+      if (badge) {
+        badge.textContent = String(total);
+        badge.className = total === 0 ? 'tab-badge zero' : 'tab-badge';
+      }
     }
 
-    function jumpToStudentCardTab(studentId) {
-      activeSingleStudentId = studentId;
-      singleMonthFilter = 'all';
-      singleStatusFilter = 'all';
-      switchTab('single');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function computeStudentStats(studentId, pekanFilter = 'all') {
-      const stuAtt = (appState.attendance && appState.attendance[studentId]) || {};
+    /**
+     * =========================================================================
+     * 5. KALKULASI STATISTIK PRESENSI PER SISWA
+     * =========================================================================
+     */
+    function computeStudentStats(sid, pekanFilter) {
+      const stuAtt = (appState.attendance && appState.attendance[sid]) || {};
       let hadirCount = 0;
       const missedSesi1 = [];
       const missedSesi2 = [];
       const completedSusulan = [];
 
-      scheduleList.forEach(sched => {
-        if (pekanFilter !== 'all' && String(sched.pekan) !== String(pekanFilter)) {
-          return;
-        }
+      for (let i = 0; i < scheduleList.length; i++) {
+        const sched = scheduleList[i];
+        if (pekanFilter !== 'all' && String(sched.pekan) !== String(pekanFilter)) continue;
+
         const dayRec = stuAtt[sched.dateStr];
-        if (!dayRec || typeof dayRec !== 'object') return;
+        if (!dayRec) continue;
 
-        ['s1', 's2'].forEach(sessionKey => {
-          const entry = dayRec[sessionKey];
+        ['s1', 's2'].forEach(function (ses) {
+          const entry = dayRec[ses];
           if (!entry || !entry.status) return;
-
           if (entry.status === 'Hadir') {
             hadirCount++;
           } else {
-            const sesiNum = sessionKey === 's1' ? 1 : 2;
-            const mapel = sessionKey === 's1' ? sched.s1 : sched.s2;
+            const sesiNum = ses === 's1' ? 1 : 2;
+            const mapel = ses === 's1' ? sched.s1 : sched.s2;
             const item = {
               dateStr: sched.dateStr,
               pekan: sched.pekan,
               pekanLabel: sched.pekanLabel,
               dayName: sched.dayName,
               shortDate: sched.shortDate,
-              sessionKey,
-              sesiNum,
-              mapel,
+              ses: ses,
+              sesiNum: sesiNum,
+              mapel: mapel,
               status: entry.status,
               susulan: Boolean(entry.susulan),
               formattedLine: `[${sched.pekanLabel} • ${sched.dayName}, ${sched.shortDate}] Sesi ${sesiNum} - ${mapel} (${entry.status})`
             };
-
-            if (entry.susulan) {
-              completedSusulan.push(item);
-            } else if (sessionKey === 's1') {
-              missedSesi1.push(item);
-            } else {
-              missedSesi2.push(item);
-            }
+            if (entry.susulan) completedSusulan.push(item);
+            else if (ses === 's1') missedSesi1.push(item);
+            else missedSesi2.push(item);
           }
         });
-      });
+      }
 
       return {
-        hadirCount,
-        missedSesi1,
-        missedSesi2,
+        hadirCount: hadirCount,
+        missedSesi1: missedSesi1,
+        missedSesi2: missedSesi2,
         totalActiveMissed: missedSesi1.length + missedSesi2.length,
-        completedSusulan
+        completedSusulan: completedSusulan
       };
-    }
-
-    function updateGlobalBadges() {
-      document.getElementById('storage-warning-banner').classList.toggle('hidden', safeStorage.isPersistent());
-      document.getElementById('demo-mode-banner').classList.toggle('hidden', !appState.isDemo);
-      updateGlobalMissedBadgeOnly();
-
-      if (appState.students.length === 0) {
-        activeSingleStudentId = '';
-      } else if (!appState.students.some(s => s.id === activeSingleStudentId)) {
-        activeSingleStudentId = appState.students[0].id;
-      }
-    }
-
-    function renderCurrentView() {
-      try {
-        updateGlobalBadges();
-        if (currentTab === 'rekap') renderRekapTab();
-        else if (currentTab === 'single') renderSingleTab();
-        else if (currentTab === 'class') renderClassTab();
-        else if (currentTab === 'upload') renderUploadTab();
-        else if (currentTab === 'settings') renderSettingsTab();
-      } catch (err) {
-        console.error('Render error:', err);
-        const crashBanner = document.getElementById('crash-recovery-banner');
-        const crashMsg = document.getElementById('crash-recovery-msg');
-        if (crashBanner && crashMsg) {
-          crashMsg.textContent = `Detail teknis: ${err.message || 'Unknown error'}. Klik tombol "Pulihkan & Mulai Bersih Sekarang" untuk memperbaiki.`;
-          crashBanner.classList.remove('hidden');
-        }
-      }
-    }
-
-    function getStatusBadgeClasses(status) {
-      switch (status) {
-        case 'Hadir':
-          return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-        case 'Izin':
-          return 'bg-blue-50 text-blue-700 border-blue-200';
-        case 'Sakit':
-          return 'bg-amber-50 text-amber-800 border-amber-200';
-        case 'Alpha':
-          return 'bg-rose-50 text-rose-700 border-rose-200';
-        default:
-          return 'bg-slate-100 text-slate-600 border-slate-200';
-      }
     }
 
     /**
      * =========================================================================
-     * 5. RENDER TAB 1: DASHBOARD REKAP & WHATSAPP
+     * 6. NAVIGASI & RENDER TAB
      * =========================================================================
      */
+    function switchTab(tabName) {
+      currentTab = tabName;
+      ['rekap', 'single', 'class', 'settings'].forEach(function (t) {
+        const panel = document.getElementById(`panel-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (!panel || !btn) return;
+        if (t === tabName) {
+          panel.classList.remove('hidden');
+          panel.style.display = 'flex';
+          btn.classList.add('active');
+        } else {
+          panel.classList.add('hidden');
+          panel.style.display = 'none';
+          btn.classList.remove('active');
+        }
+      });
+      renderCurrentTab();
+    }
+
+    function updateGlobalUIState() {
+      document.getElementById('storage-warning-banner').classList.toggle('hidden', safeStorage.isPersistent());
+      document.getElementById('demo-mode-banner').classList.toggle('hidden', !appState.isDemo);
+      updateGlobalMissedBadge();
+
+      if (appState.students.length === 0) {
+        activeSingleStudentId = '';
+      } else if (!appState.students.some(function (s) { return s.id === activeSingleStudentId; })) {
+        activeSingleStudentId = appState.students[0].id;
+      }
+    }
+
+    function renderCurrentTab() {
+      updateGlobalUIState();
+      if (currentTab === 'rekap') renderRekapTab();
+      else if (currentTab === 'single') renderSingleTab();
+      else if (currentTab === 'class') renderClassTab();
+      else if (currentTab === 'settings') renderSettingsTab();
+    }
+
+    /**
+     * -------------------------------------------------------------------------
+     * TAB 1: DASHBOARD REKAP & WHATSAPP
+     * -------------------------------------------------------------------------
+     */
     function renderRekapTab() {
-      const searchQuery = (document.getElementById('rekap-search-input').value || '').trim().toLowerCase();
-      const statusFilter = document.getElementById('rekap-status-filter').value;
+      const searchQ = (document.getElementById('rekap-search-input').value || '').trim().toLowerCase();
+      const stuDropEl = document.getElementById('rekap-student-dropdown');
+      const prevStuFilter = stuDropEl.value || 'all';
+
+      let stuOpts = `<option value="all">Semua Anak Wali (${appState.students.length})</option>`;
+      appState.students.forEach(function (s, i) {
+        stuOpts += `<option value="${s.id}">${i + 1}. ${escapeHTML(s.name)}</option>`;
+      });
+      stuDropEl.innerHTML = stuOpts;
+      stuDropEl.value = appState.students.some(function (s) { return s.id === prevStuFilter; }) ? prevStuFilter : 'all';
+
+      const selectedStuId = stuDropEl.value;
       const pekanFilter = document.getElementById('rekap-pekan-filter').value;
+      const statusFilter = document.getElementById('rekap-status-filter').value;
 
-      let totalSesi1Missed = 0;
-      let totalSesi2Missed = 0;
-      let totalSusulanDone = 0;
-      let safeStudentsCount = 0;
+      let totalS1 = 0;
+      let totalS2 = 0;
+      let totalSusulan = 0;
+      let safeCount = 0;
 
-      const enrichedStudents = appState.students.map(stu => {
+      const enriched = appState.students.map(function (stu) {
         const stats = computeStudentStats(stu.id, pekanFilter);
-        totalSesi1Missed += stats.missedSesi1.length;
-        totalSesi2Missed += stats.missedSesi2.length;
-        totalSusulanDone += stats.completedSusulan.length;
-        if (stats.totalActiveMissed === 0) safeStudentsCount++;
-        return { ...stu, stats };
+        totalS1 += stats.missedSesi1.length;
+        totalS2 += stats.missedSesi2.length;
+        totalSusulan += stats.completedSusulan.length;
+        if (stats.totalActiveMissed === 0) safeCount++;
+        return { stu: stu, stats: stats };
       });
 
       document.getElementById('rekap-kpi-cards').innerHTML = `
-        <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs">
-          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Anak Wali</p>
-          <p class="text-2xl font-extrabold text-slate-900 mt-0.5">${appState.students.length}</p>
-          <p class="text-[11px] text-slate-400">Terdaftar aktif</p>
+        <div class="kpi-box">
+          <div class="kpi-label">Total Anak Wali</div>
+          <div class="kpi-val">${appState.students.length}</div>
+          <div class="kpi-sub">Terdaftar aktif</div>
         </div>
-
-        <div class="bg-white rounded-2xl border ${totalSesi1Missed > 0 ? 'border-amber-300' : 'border-slate-200'} p-3.5 shadow-2xs">
-          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Terlewat Sesi 1</p>
-          <p class="text-2xl font-extrabold ${totalSesi1Missed > 0 ? 'text-amber-600' : 'text-slate-900'} mt-0.5">${totalSesi1Missed}</p>
-          <p class="text-[11px] text-slate-400">Belum susulan</p>
+        <div class="kpi-box" style="${totalS1 > 0 ? 'border-color:var(--amber-border);' : ''}">
+          <div class="kpi-label">Terlewat Sesi 1</div>
+          <div class="kpi-val" style="${totalS1 > 0 ? 'color:var(--amber);' : ''}">${totalS1}</div>
+          <div class="kpi-sub">Belum susulan</div>
         </div>
-
-        <div class="bg-white rounded-2xl border ${totalSesi2Missed > 0 ? 'border-rose-300' : 'border-slate-200'} p-3.5 shadow-2xs">
-          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Terlewat Sesi 2</p>
-          <p class="text-2xl font-extrabold ${totalSesi2Missed > 0 ? 'text-rose-600' : 'text-slate-900'} mt-0.5">${totalSesi2Missed}</p>
-          <p class="text-[11px] text-slate-400">Belum susulan</p>
+        <div class="kpi-box" style="${totalS2 > 0 ? 'border-color:var(--rose-border);' : ''}">
+          <div class="kpi-label">Terlewat Sesi 2</div>
+          <div class="kpi-val" style="${totalS2 > 0 ? 'color:var(--rose);' : ''}">${totalS2}</div>
+          <div class="kpi-sub">Belum susulan</div>
         </div>
-
-        <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs">
-          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Sudah Susulan</p>
-          <p class="text-2xl font-extrabold text-violet-600 mt-0.5">${totalSusulanDone}</p>
-          <p class="text-[11px] text-slate-400">Sesi tuntas susulan</p>
+        <div class="kpi-box">
+          <div class="kpi-label">Sudah Susulan</div>
+          <div class="kpi-val" style="color:var(--violet);">${totalSusulan}</div>
+          <div class="kpi-sub">Sesi tuntas</div>
         </div>
-
-        <div class="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs">
-          <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Siswa Aman</p>
-          <p class="text-2xl font-extrabold text-emerald-600 mt-0.5">${safeStudentsCount}</p>
-          <p class="text-[11px] text-slate-400">0 tanggungan aktif</p>
+        <div class="kpi-box">
+          <div class="kpi-label">Siswa Aman</div>
+          <div class="kpi-val" style="color:var(--emerald);">${safeCount}</div>
+          <div class="kpi-sub">0 tanggungan</div>
         </div>
       `;
 
-      const filteredList = enrichedStudents.filter(item => {
-        const safeName = String(item.name || '').toLowerCase();
-        if (searchQuery && !safeName.includes(searchQuery)) return false;
+      const filtered = enriched.filter(function (item) {
+        if (selectedStuId !== 'all' && item.stu.id !== selectedStuId) return false;
+        if (searchQ && !item.stu.name.toLowerCase().includes(searchQ)) return false;
         if (statusFilter === 'missed' && item.stats.totalActiveMissed === 0) return false;
         if (statusFilter === 'safe' && item.stats.totalActiveMissed > 0) return false;
         return true;
       });
 
-      const listContainer = document.getElementById('rekap-student-list');
+      const listEl = document.getElementById('rekap-student-list');
 
       if (appState.students.length === 0) {
-        listContainer.innerHTML = `
-          <div class="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-8 text-center space-y-3">
-            <h3 class="text-base font-bold text-slate-900">Belum Ada Anak Wali Terdaftar</h3>
-            <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-              Tambahkan nama anak wali Anda di tab <strong>2. Input 1: Kartu 1 Anak</strong> atau <strong>5. Atur Siswa & Jadwal</strong>.
-            </p>
-            <button type="button" onclick="switchTab('single')"
-              class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold">
-              + Tambah Anak Wali Sekarang
-            </button>
+        listEl.innerHTML = `
+          <div class="card" style="text-align:center;padding:28px 16px;">
+            <h3 style="margin:0 0 6px;font-size:15px;">Belum Ada Anak Wali Terdaftar</h3>
+            <p style="margin:0 0 12px;font-size:12px;color:var(--text-light);">Tambahkan anak wali Anda di Tab 2 atau Tab 4.</p>
+            <button type="button" class="btn btn-primary" data-act="switch-tab" data-val="single">+ Tambah Anak Wali Sekarang</button>
           </div>
         `;
         return;
       }
 
-      if (filteredList.length === 0) {
-        listContainer.innerHTML = `
-          <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs sm:text-sm text-slate-500">
-            Tidak ada anak wali yang cocok dengan filter saat ini.
-          </div>
-        `;
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="card" style="text-align:center;color:var(--text-light);">Tidak ada anak wali yang cocok dengan filter saat ini.</div>`;
         return;
       }
 
-      listContainer.innerHTML = filteredList.map((stu, idx) => {
-        const { stats } = stu;
-        const allMissed = [...stats.missedSesi1, ...stats.missedSesi2].sort((a, b) => {
+      listEl.innerHTML = filtered.map(function (item, idx) {
+        const stu = item.stu;
+        const stats = item.stats;
+        const allMissed = stats.missedSesi1.concat(stats.missedSesi2).sort(function (a, b) {
           if (a.dateStr !== b.dateStr) return a.dateStr.localeCompare(b.dateStr);
           return a.sesiNum - b.sesiNum;
         });
 
-        const hasTanggungan = allMissed.length > 0;
-        const leftBorder = hasTanggungan ? 'border-l-4 border-l-rose-500' : 'border-l-4 border-l-emerald-500';
+        const hasMissed = allMissed.length > 0;
+        const statusBadgeCls = function (st) {
+          if (st === 'Izin') return 'pill pill-blue';
+          if (st === 'Sakit') return 'pill pill-amber';
+          return 'pill pill-rose';
+        };
 
-        const missedItemsHTML = hasTanggungan
-          ? `
-            <div class="space-y-1.5 pt-1">
-              ${allMissed.map(m => `
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200/90">
-                  <div class="flex flex-wrap items-center gap-1.5 text-xs text-slate-800">
-                    <span class="font-extrabold text-indigo-700">[${m.pekanLabel} • ${m.dayName}, ${m.shortDate}]</span>
-                    <span class="font-bold">Sesi ${m.sesiNum} - ${escapeHTML(m.mapel)}</span>
-                    <span class="px-2 py-0.5 rounded-md border text-[11px] font-bold ${getStatusBadgeClasses(m.status)}">
-                      ${m.status}
-                    </span>
+        const missedHTML = hasMissed
+          ? allMissed.map(function (m) {
+              return `
+                <div class="missed-row">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+                    <strong style="color:var(--primary);">[${m.pekanLabel} • ${m.dayName}, ${m.shortDate}]</strong>
+                    <strong>Sesi ${m.sesiNum} - ${escapeHTML(m.mapel)}</strong>
+                    <span class="${statusBadgeCls(m.status)}">${m.status}</span>
                   </div>
-                  <button type="button"
-                    data-action="toggle-susulan"
-                    data-student="${stu.id}"
-                    data-date="${m.dateStr}"
-                    data-session="${m.sessionKey}"
-                    class="self-start sm:self-center shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-bold">
+                  <button type="button" class="btn btn-sm btn-violet"
+                    data-act="toggle-susulan" data-sid="${stu.id}" data-dk="${m.dateStr}" data-ses="${m.ses}">
                     ✓ Susulan
                   </button>
                 </div>
-              `).join('')}
-            </div>
-          `
-          : `
-            <div class="flex items-center gap-2 text-xs text-emerald-700 font-semibold pt-1">
-              <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[11px]">✓</span>
-              <span>Aman (Tidak ada sesi/mapel yang terlewat${pekanFilter !== 'all' ? ' pada Pekan ' + pekanFilter : ''})</span>
-            </div>
-          `;
+              `;
+            }).join('')
+          : `<div style="font-size:12px;font-weight:700;color:var(--emerald);">✓ Aman (Tidak ada sesi/mapel yang terlewat)</div>`;
 
-        const susulanNoteHTML = stats.completedSusulan.length > 0
-          ? `
-            <div class="pt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-violet-700">
-              <span class="font-bold">✓ Susulan Tuntas (${stats.completedSusulan.length}):</span>
-              ${stats.completedSusulan.map(s => `
-                <span class="px-2 py-0.5 rounded-md bg-violet-50 border border-violet-200">
-                  ${s.pekanLabel} Sesi ${s.sesiNum} (${escapeHTML(s.mapel)})
-                </span>
-              `).join('')}
-            </div>
-          `
+        const susulanHTML = stats.completedSusulan.length > 0
+          ? `<div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:11px;color:var(--violet);">
+              <strong>✓ Susulan Tuntas (${stats.completedSusulan.length}):</strong>
+              ${stats.completedSusulan.map(function (s) {
+                return `<span class="pill pill-violet">${s.pekanLabel} Sesi ${s.sesiNum} (${escapeHTML(s.mapel)})</span>`;
+              }).join('')}
+            </div>`
           : '';
 
         return `
-          <div class="bg-white rounded-2xl border border-slate-200 ${leftBorder} p-4 shadow-2xs space-y-2.5">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="text-xs font-bold text-slate-400">#${idx + 1}</span>
-                <button type="button" onclick="jumpToStudentCardTab('${stu.id}')"
-                  class="text-base font-extrabold text-slate-900 hover:text-indigo-600 underline decoration-indigo-300 decoration-2 underline-offset-4 text-left">
+          <div class="rekap-card ${hasMissed ? 'has-missed' : ''}">
+            <div class="rekap-top">
+              <div class="rekap-title-group">
+                <span style="font-size:12px;font-weight:700;color:var(--text-light);">#${idx + 1}</span>
+                <button type="button" class="stu-link" data-act="open-student-card" data-sid="${stu.id}">
                   ${escapeHTML(stu.name)}
                 </button>
-
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold ${stats.missedSesi1.length > 0 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-500'}">
-                  Sesi 1 Terlewat: ${stats.missedSesi1.length}
-                </span>
-
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold ${stats.missedSesi2.length > 0 ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-500'}">
-                  Sesi 2 Terlewat: ${stats.missedSesi2.length}
-                </span>
-
-                <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700">
-                  Hadir: ${stats.hadirCount}
-                </span>
+                <span class="pill ${stats.missedSesi1.length > 0 ? 'pill-amber' : ''}">Sesi 1 Terlewat: ${stats.missedSesi1.length}</span>
+                <span class="pill ${stats.missedSesi2.length > 0 ? 'pill-rose' : ''}">Sesi 2 Terlewat: ${stats.missedSesi2.length}</span>
+                <span class="pill pill-emerald">Hadir: ${stats.hadirCount}</span>
               </div>
 
-              <div class="flex flex-wrap items-center gap-2 shrink-0">
-                <button type="button" onclick="copyStudentReportText('${stu.id}')"
-                  class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold">
-                  Salin Teks
-                </button>
-
-                <button type="button" onclick="openWhatsAppReport('${stu.id}')"
-                  class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs">
-                  Kirim WA
-                </button>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <button type="button" class="btn btn-sm btn-neutral" data-act="copy-wa" data-sid="${stu.id}">Salin Teks</button>
+                <button type="button" class="btn btn-sm btn-emerald" data-act="send-wa" data-sid="${stu.id}">Kirim WA</button>
               </div>
             </div>
-
-            ${missedItemsHTML}
-            ${susulanNoteHTML}
+            ${missedHTML}
+            ${susulanHTML}
           </div>
         `;
       }).join('');
     }
 
     /**
-     * =========================================================================
-     * 6. RENDER TAB 2: INPUT 1 — KARTU KENDALI 1 ANAK BERDERET (SEP–DES)
-     * =========================================================================
+     * -------------------------------------------------------------------------
+     * TAB 2: INPUT 1 — KARTU KENDALI 1 ANAK BERDERET (SEP–DES)
+     * -------------------------------------------------------------------------
      */
-    function handleQuickAddFromSingleTab(e) {
-      e.preventDefault();
-      const input = document.getElementById('single-quick-add-input');
-      const raw = input.value.trim();
-      if (!raw) return;
-
-      const parts = raw.split(/\s+-\s+/);
-      const name = (parts[0] || '').trim();
-      const phone = parts[1] ? normalizePhoneID(parts[1].trim()) : '';
-      if (!name) return;
-
-      const newId = 'stu_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-      appState.students.push({ id: newId, name, phone });
-      activeSingleStudentId = newId;
-      singleMonthFilter = 'all';
-      singleStatusFilter = 'all';
-      input.value = '';
-
-      scheduleSaveAppState(true);
-      renderCurrentView();
-      showToast(`Kartu kendali Sep–Des untuk "${name}" siap diinput!`, 'success');
-    }
-
-    function selectSingleStudent(studentId) {
-      activeSingleStudentId = studentId;
-      singleInlineEditKey = null;
-      renderSingleTab();
-    }
-
     function renderSingleStudentPills() {
-      const pillsEl = document.getElementById('single-student-pills');
-      if (!pillsEl) return;
-
+      const strip = document.getElementById('single-student-pills');
+      if (!strip) return;
       if (appState.students.length === 0) {
-        pillsEl.innerHTML = '<span class="text-xs text-slate-400">Ketik nama anak wali pada kolom di atas lalu tekan Tambah.</span>';
+        strip.innerHTML = `<span style="font-size:12px;color:var(--text-light);">Ketik nama anak wali pada kolom di atas lalu tekan + Tambah.</span>`;
         return;
       }
-
-      pillsEl.innerHTML = `
-        <span class="text-[11px] font-bold text-slate-400 shrink-0">Pindah Cepat:</span>
-        ${appState.students.map(stu => {
-          const isSelected = stu.id === activeSingleStudentId;
-          const st = computeStudentStats(stu.id, 'all');
-          const cls = isSelected
-            ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
-            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200';
-          const badge = st.totalActiveMissed > 0
-            ? `<span class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${isSelected ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700'}">${st.totalActiveMissed}</span>`
-            : '';
+      strip.innerHTML = `
+        <span style="font-size:11px;font-weight:700;color:var(--text-light);flex-shrink:0;">Pindah Cepat:</span>
+        ${appState.students.map(function (stu) {
+          const sel = stu.id === activeSingleStudentId;
+          const miss = computeStudentStats(stu.id, 'all').totalActiveMissed;
           return `
-            <button type="button" onclick="selectSingleStudent('${stu.id}')"
-              class="shrink-0 inline-flex items-center px-3 py-1.5 rounded-full border text-xs font-bold transition ${cls}">
+            <button type="button" class="stu-pill-btn ${sel ? 'selected' : ''}" data-act="select-single-student" data-sid="${stu.id}">
               <span>${escapeHTML(stu.name)}</span>
-              ${badge}
+              ${miss > 0 ? `<span class="tab-badge" style="font-size:9px;padding:1px 5px;">${miss}</span>` : ''}
             </button>
           `;
         }).join('')}
       `;
     }
 
-    function renderSingleSummaryStrip(student) {
+    function renderSingleSummaryStrip(stu) {
       const stripEl = document.getElementById('single-summary-strip');
-      if (!stripEl || !student) return;
+      if (!stripEl || !stu) return;
+      const stats = computeStudentStats(stu.id, 'all');
 
-      const stats = computeStudentStats(student.id, 'all');
-      const renderMiniMissedList = (items) => {
+      const buildMiniList = function (items) {
         if (items.length === 0) {
-          return `<p class="text-xs text-emerald-700 font-semibold mt-1.5">✓ Aman (0 terlewat)</p>`;
+          return `<p style="margin:6px 0 0;font-size:12px;font-weight:700;color:var(--emerald);">✓ Aman (0 terlewat)</p>`;
         }
         return `
-          <ul class="mt-2 space-y-1 max-h-24 overflow-y-auto pr-1 text-[11px] text-slate-700">
-            ${items.map(m => `
-              <li class="px-2 py-1 rounded-lg bg-slate-50 border border-slate-200/80 truncate" title="${escapeHTML(m.formattedLine)}">
-                <strong class="text-indigo-700">${m.pekanLabel}</strong> (${m.shortDate}) • <strong>${escapeHTML(m.mapel)}</strong> [${m.status}]
-              </li>
-            `).join('')}
+          <ul class="mini-missed-list">
+            ${items.map(function (m) {
+              return `<li><strong style="color:var(--primary);">${m.pekanLabel}</strong> (${m.shortDate}) • <strong>${escapeHTML(m.mapel)}</strong> [${m.status}]</li>`;
+            }).join('')}
           </ul>
         `;
       };
 
       stripEl.innerHTML = `
-        <div class="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between">
+        <div class="kpi-box" style="display:flex;flex-direction:column;justify-content:space-between;">
           <div>
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Hadir</p>
-            <p class="text-2xl font-extrabold text-emerald-600 mt-1">
-              ${stats.hadirCount} <span class="text-xs font-semibold text-slate-400">/ ${scheduleList.length * 2} Sesi</span>
-            </p>
+            <div class="kpi-label">Total Hadir</div>
+            <div class="kpi-val" style="color:var(--emerald);">${stats.hadirCount} <span style="font-size:12px;color:var(--text-light);font-weight:600;">/ ${scheduleList.length * 2} Sesi</span></div>
           </div>
-          <p class="text-xs text-slate-600 mt-2 truncate">
-            Ananda: <strong>${escapeHTML(student.name)}</strong>
-          </p>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Ananda: <strong>${escapeHTML(stu.name)}</strong></div>
         </div>
 
-        <div class="bg-white rounded-2xl border ${stats.missedSesi1.length > 0 ? 'border-amber-300' : 'border-slate-200'} p-3.5 sm:p-4 shadow-2xs">
-          <div class="flex items-center justify-between">
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Terlewat Sesi 1</p>
-            <span class="px-2 py-0.5 rounded-full text-xs font-extrabold ${stats.missedSesi1.length > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500'}">
-              ${stats.missedSesi1.length}
-            </span>
+        <div class="kpi-box" style="${stats.missedSesi1.length > 0 ? 'border-color:var(--amber-border);' : ''}">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="kpi-label">Terlewat Sesi 1</span>
+            <span class="pill ${stats.missedSesi1.length > 0 ? 'pill-amber' : ''}">${stats.missedSesi1.length}</span>
           </div>
-          ${renderMiniMissedList(stats.missedSesi1)}
+          ${buildMiniList(stats.missedSesi1)}
         </div>
 
-        <div class="bg-white rounded-2xl border ${stats.missedSesi2.length > 0 ? 'border-rose-300' : 'border-slate-200'} p-3.5 sm:p-4 shadow-2xs">
-          <div class="flex items-center justify-between">
-            <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Terlewat Sesi 2</p>
-            <span class="px-2 py-0.5 rounded-full text-xs font-extrabold ${stats.missedSesi2.length > 0 ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-500'}">
-              ${stats.missedSesi2.length}
-            </span>
+        <div class="kpi-box" style="${stats.missedSesi2.length > 0 ? 'border-color:var(--rose-border);' : ''}">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="kpi-label">Terlewat Sesi 2</span>
+            <span class="pill ${stats.missedSesi2.length > 0 ? 'pill-rose' : ''}">${stats.missedSesi2.length}</span>
           </div>
-          ${renderMiniMissedList(stats.missedSesi2)}
+          ${buildMiniList(stats.missedSesi2)}
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-4 shadow-2xs flex flex-col justify-between space-y-2.5">
+        <div class="kpi-box" style="display:flex;flex-direction:column;justify-content:space-between;gap:8px;">
           <div>
-            <div class="flex items-center justify-between">
-              <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Tanggungan Aktif</p>
-              <span class="text-[11px] font-bold text-violet-700">${stats.completedSusulan.length} Susulan</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span class="kpi-label">Tanggungan Aktif</span>
+              <span style="font-size:11px;font-weight:700;color:var(--violet);">${stats.completedSusulan.length} Susulan</span>
             </div>
-            <p class="text-2xl font-extrabold ${stats.totalActiveMissed > 0 ? 'text-rose-600' : 'text-slate-900'} mt-1">
-              ${stats.totalActiveMissed} <span class="text-xs font-semibold text-slate-400">Mapel</span>
-            </p>
+            <div class="kpi-val" style="${stats.totalActiveMissed > 0 ? 'color:var(--rose);' : ''}">${stats.totalActiveMissed} <span style="font-size:12px;color:var(--text-light);font-weight:600;">Mapel</span></div>
           </div>
-          <div class="grid grid-cols-2 gap-1.5">
-            <button type="button" onclick="copyStudentReportText('${student.id}')"
-              class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold">
-              Salin WA
-            </button>
-            <button type="button" onclick="openWhatsAppReport('${student.id}')"
-              class="px-2.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs">
-              Kirim WA
-            </button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <button type="button" class="btn btn-sm btn-neutral" data-act="copy-wa" data-sid="${stu.id}">Salin WA</button>
+            <button type="button" class="btn btn-sm btn-emerald" data-act="send-wa" data-sid="${stu.id}">Kirim WA</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildSingleSessionBoxHTML(sid, sched, ses, mapelName, entry, isCustom) {
+      const sesiTitle = ses === 's1' ? 'SESI 1' : 'SESI 2';
+      const status = entry.status || '';
+      const susulan = Boolean(entry.susulan);
+      const isMissed = status && status !== 'Hadir';
+      const editKey = `${sched.dateStr}__${ses}`;
+      const isEditing = singleInlineEditKey === editKey;
+
+      const mapelPart = isEditing
+        ? `<input type="text" id="inline-mapel-input" value="${escapeHTML(mapelName)}"
+            data-dk="${sched.dateStr}" data-ses="${ses}"
+            style="padding:3px 7px;font-size:12px;font-weight:700;" />`
+        : `<button type="button" class="mapel-btn ${isMissed && susulan ? 'struck' : ''}"
+            data-act="edit-inline-mapel" data-dk="${sched.dateStr}" data-ses="${ses}"
+            title="Klik untuk ubah nama mapel tanggal ini">
+            ${escapeHTML(mapelName)}${isCustom ? ' *' : ''}
+          </button>`;
+
+      const susulanPart = isMissed
+        ? `<button type="button" class="btn btn-sm ${susulan ? 'btn-violet' : 'btn-rose-soft'}"
+            data-act="toggle-susulan" data-sid="${sid}" data-dk="${sched.dateStr}" data-ses="${ses}">
+            ${susulan ? '✓ Sudah Susulan' : 'Susulan?'}
+          </button>`
+        : '';
+
+      const statuses = ['Hadir', 'Izin', 'Sakit', 'Alpha'];
+
+      return `
+        <div data-session-box="${editKey}" class="session-box ${isMissed && !susulan ? 'missed-active' : ''}">
+          <div class="session-head">
+            <div class="session-mapel-wrap">
+              <span class="sesi-tag ${ses === 's2' ? 's2' : ''}">${sesiTitle}</span>
+              ${mapelPart}
+            </div>
+            ${susulanPart}
+          </div>
+          <div class="status-grid">
+            ${statuses.map(function (st) {
+              const activeCls = status === st ? `active-${st}` : '';
+              return `
+                <button type="button" class="st-btn ${activeCls}"
+                  data-act="set-status" data-sid="${sid}" data-dk="${sched.dateStr}" data-ses="${ses}" data-val="${st}">
+                  ${st}
+                </button>
+              `;
+            }).join('')}
           </div>
         </div>
       `;
@@ -1799,101 +2263,82 @@
       renderSingleStudentPills();
 
       if (appState.students.length === 0) {
-        selectEl.innerHTML = '<option value="">-- Belum ada anak wali --</option>';
+        selectEl.innerHTML = `<option value="">-- Belum ada anak wali --</option>`;
         stripEl.innerHTML = '';
         toolbarEl.innerHTML = '';
         pekanListEl.innerHTML = `
-          <div class="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-8 sm:p-12 text-center space-y-2">
-            <h3 class="text-base font-bold text-slate-900">Belum Ada Anak Wali Terpilih</h3>
-            <p class="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
-              Ketik nama 1 anak wali di kotak atas untuk langsung memunculkan deretan pertemuannya tiap pekan dari September sampai akhir Desember.
-            </p>
+          <div class="card" style="text-align:center;padding:28px 16px;">
+            <h3 style="margin:0 0 6px;font-size:15px;">Belum Ada Anak Wali Terpilih</h3>
+            <p style="margin:0;font-size:12px;color:var(--text-light);">Ketik nama 1 anak wali di kotak atas lalu klik <strong>+ Tambah</strong> untuk memunculkan seluruh pertemuan Sep–Des.</p>
           </div>
         `;
         return;
       }
 
-      selectEl.innerHTML = appState.students.map((stu, idx) => {
-        const st = computeStudentStats(stu.id, 'all');
-        const info = st.totalActiveMissed > 0 ? ` (${st.totalActiveMissed} Terlewat)` : ' (Aman)';
-        return `<option value="${stu.id}" ${stu.id === activeSingleStudentId ? 'selected' : ''}>${idx + 1}. ${escapeHTML(stu.name)}${info}</option>`;
+      selectEl.innerHTML = appState.students.map(function (stu, idx) {
+        const miss = computeStudentStats(stu.id, 'all').totalActiveMissed;
+        return `<option value="${stu.id}" ${stu.id === activeSingleStudentId ? 'selected' : ''}>${idx + 1}. ${escapeHTML(stu.name)}${miss > 0 ? ` (${miss} Terlewat)` : ' (Aman)'}</option>`;
       }).join('');
 
-      const student = appState.students.find(s => s.id === activeSingleStudentId) || appState.students[0];
-      const stats = computeStudentStats(student.id, 'all');
-      const stuAtt = appState.attendance[student.id] || {};
+      const stu = appState.students.find(function (s) { return s.id === activeSingleStudentId; }) || appState.students[0];
+      const stats = computeStudentStats(stu.id, 'all');
+      const stuAtt = appState.attendance[stu.id] || {};
 
-      renderSingleSummaryStrip(student);
+      renderSingleSummaryStrip(stu);
+
+      const monthTabs = [
+        { val: 'all', label: 'Semua' },
+        { val: '8', label: 'Sep' },
+        { val: '9', label: 'Okt' },
+        { val: '10', label: 'Nov' },
+        { val: '11', label: 'Des' }
+      ];
 
       toolbarEl.innerHTML = `
-        <div class="bg-white rounded-2xl border border-slate-200 p-3.5 sm:p-4 shadow-2xs space-y-3">
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
-            <div class="flex flex-wrap items-center gap-2">
-              <button type="button" onclick="promptSetAllPresentSingle('${student.id}')"
-                class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-2xs">
+        <div class="card" style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <button type="button" class="btn btn-sm btn-emerald" data-act="single-all-present" data-sid="${stu.id}">
                 ✓ Set Semua Hadir (Sep–Des)
               </button>
-
-              <button type="button" onclick="setPresentUpToTodaySingle('${student.id}')"
-                class="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold">
+              <button type="button" class="btn btn-sm btn-emerald-soft" data-act="single-upto-today" data-sid="${stu.id}">
                 Set Hadir s.d. Hari Ini
               </button>
-
-              <button type="button" onclick="promptClearSingleStudentAttendance('${student.id}')"
-                class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 text-xs font-semibold">
+              <button type="button" class="btn btn-sm btn-neutral" data-act="single-clear-status" data-sid="${stu.id}">
                 Kosongkan Status
               </button>
             </div>
 
-            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-              <span class="text-[11px] font-bold text-slate-400 shrink-0">Bulan:</span>
-              ${[
-                { val: 'all', label: 'Semua' },
-                { val: '8', label: 'Sep' },
-                { val: '9', label: 'Okt' },
-                { val: '10', label: 'Nov' },
-                { val: '11', label: 'Des' }
-              ].map(m => `
-                <button type="button" onclick="setSingleMonthFilter('${m.val}')"
-                  class="shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-bold ${
-                    singleMonthFilter === m.val ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }">
-                  ${m.label}
-                </button>
-              `).join('')}
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;">
+              <span style="font-size:11px;font-weight:700;color:var(--text-light);">Bulan:</span>
+              ${monthTabs.map(function (m) {
+                return `
+                  <button type="button" class="btn btn-sm ${singleMonthFilter === m.val ? 'btn-primary' : 'btn-neutral'}"
+                    data-act="single-month-filter" data-val="${m.val}">
+                    ${m.label}
+                  </button>
+                `;
+              }).join('')}
             </div>
           </div>
 
-          <div class="pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-2">
-            <span class="text-[11px] font-bold text-slate-400">Filter Status:</span>
-            <button type="button" onclick="setSingleStatusFilter('all')"
-              class="px-3 py-1.5 rounded-xl text-xs font-bold ${
-                singleStatusFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }">
-              Semua Pertemuan
-            </button>
-            <button type="button" onclick="setSingleStatusFilter('missed')"
-              class="px-3 py-1.5 rounded-xl text-xs font-bold ${
-                singleStatusFilter === 'missed' ? 'bg-rose-600 text-white' : 'bg-rose-50 text-rose-700 border border-rose-200'
-              }">
-              Hanya Terlewat (${stats.totalActiveMissed})
-            </button>
-            <button type="button" onclick="setSingleStatusFilter('susulan')"
-              class="px-3 py-1.5 rounded-xl text-xs font-bold ${
-                singleStatusFilter === 'susulan' ? 'bg-violet-600 text-white' : 'bg-violet-50 text-violet-700 border border-violet-200'
-              }">
-              Sudah Susulan (${stats.completedSusulan.length})
-            </button>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px;border-top:1px solid #f1f5f9;">
+            <span style="font-size:11px;font-weight:700;color:var(--text-light);">Tampilkan:</span>
+            <button type="button" class="btn btn-sm ${singleStatusFilter === 'all' ? 'btn-primary' : 'btn-neutral'}"
+              data-act="single-status-filter" data-val="all">Semua Pertemuan</button>
+            <button type="button" class="btn btn-sm ${singleStatusFilter === 'missed' ? 'btn-rose' : 'btn-rose-soft'}"
+              data-act="single-status-filter" data-val="missed">Hanya Terlewat (${stats.totalActiveMissed})</button>
+            <button type="button" class="btn btn-sm ${singleStatusFilter === 'susulan' ? 'btn-violet' : 'btn-violet-soft'}"
+              data-act="single-status-filter" data-val="susulan">Sudah Susulan (${stats.completedSusulan.length})</button>
           </div>
         </div>
       `;
 
-      const filteredSchedules = scheduleList.filter(sched => {
+      const filteredSchedules = scheduleList.filter(function (sched) {
         if (singleMonthFilter !== 'all' && String(sched.monthIdx) !== singleMonthFilter) return false;
         const rec = stuAtt[sched.dateStr] || {};
         const s1 = rec.s1 || {};
         const s2 = rec.s2 || {};
-
         if (singleStatusFilter === 'missed') {
           return (s1.status && s1.status !== 'Hadir' && !s1.susulan) ||
                  (s2.status && s2.status !== 'Hadir' && !s2.susulan);
@@ -1907,7 +2352,7 @@
 
       const pekanGroups = [];
       const pekanMap = new Map();
-      filteredSchedules.forEach(sched => {
+      filteredSchedules.forEach(function (sched) {
         if (!pekanMap.has(sched.pekan)) {
           const grp = { pekan: sched.pekan, pekanLabel: sched.pekanLabel, items: [] };
           pekanMap.set(sched.pekan, grp);
@@ -1917,144 +2362,271 @@
       });
 
       if (pekanGroups.length === 0) {
-        pekanListEl.innerHTML = `
-          <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-1">
-            <p class="text-sm font-bold text-slate-800">Tidak ada pertemuan pada filter ini</p>
-            <p class="text-xs text-slate-500">Pilih "Semua Pertemuan" untuk melihat seluruh pekan.</p>
-          </div>
-        `;
+        pekanListEl.innerHTML = `<div class="card" style="text-align:center;color:var(--text-light);">Tidak ada pertemuan pada filter ini.</div>`;
         return;
       }
 
-      pekanListEl.innerHTML = pekanGroups.map(grp => `
-        <div class="pekan-card bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-          <div class="bg-slate-800 text-white px-4 py-2.5 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-0.5 rounded-md bg-indigo-500 text-white text-xs font-extrabold tracking-wide">
-                ${grp.pekanLabel.toUpperCase()}
-              </span>
-              <span class="text-xs text-slate-300 font-medium">
-                ${grp.items[0].shortDate}${grp.items.length > 1 ? ' – ' + grp.items[grp.items.length - 1].shortDate : ''}
-              </span>
+      pekanListEl.innerHTML = pekanGroups.map(function (grp) {
+        const rangeText = grp.items[0].shortDate + (grp.items.length > 1 ? ' – ' + grp.items[grp.items.length - 1].shortDate : '');
+        return `
+          <div class="pekan-group">
+            <div class="pekan-header">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="pekan-badge">${grp.pekanLabel.toUpperCase()}</span>
+                <span style="font-size:12px;color:#cbd5e1;font-weight:600;">${rangeText}</span>
+              </div>
+              <span style="font-size:11px;color:#94a3b8;font-weight:700;">${grp.items.length} Pertemuan</span>
             </div>
-            <span class="text-[11px] text-slate-300 font-semibold">${grp.items.length} Pertemuan</span>
-          </div>
+            <div>
+              ${grp.items.map(function (sched) {
+                const dayRec = stuAtt[sched.dateStr] || {};
+                const s1Entry = dayRec.s1 || { status: '', susulan: false };
+                const s2Entry = dayRec.s2 || { status: '', susulan: false };
+                const hasMissed =
+                  (s1Entry.status && s1Entry.status !== 'Hadir' && !s1Entry.susulan) ||
+                  (s2Entry.status && s2Entry.status !== 'Hadir' && !s2Entry.susulan);
+                const bothPresent = s1Entry.status === 'Hadir' && s2Entry.status === 'Hadir';
 
-          <div class="divide-y divide-slate-200">
-            ${grp.items.map(sched => {
-              const dayRec = stuAtt[sched.dateStr] || {};
-              const s1Entry = dayRec.s1 || { status: '', susulan: false };
-              const s2Entry = dayRec.s2 || { status: '', susulan: false };
-              const hasMissed =
-                (s1Entry.status && s1Entry.status !== 'Hadir' && !s1Entry.susulan) ||
-                (s2Entry.status && s2Entry.status !== 'Hadir' && !s2Entry.susulan);
-              const bothPresent = s1Entry.status === 'Hadir' && s2Entry.status === 'Hadir';
-
-              return `
-                <div data-meeting-row="${sched.dateStr}" class="p-3.5 sm:p-4 ${hasMissed ? 'bg-rose-50/20' : 'bg-white'} transition space-y-3">
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="space-y-0.5">
-                      <span class="inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-600">
-                        ${sched.dayName}
-                      </span>
-                      <h4 class="text-sm sm:text-base font-extrabold text-slate-900">
-                        ${sched.dayName}, ${sched.shortDate}
-                      </h4>
+                return `
+                  <div data-meeting-row="${sched.dateStr}" class="meeting-row ${hasMissed ? 'row-alert' : ''}">
+                    <div class="meeting-head">
+                      <div>
+                        <h4 class="meeting-date-title">${sched.dayName}, ${sched.shortDate}</h4>
+                      </div>
+                      <button type="button" class="btn btn-sm ${bothPresent ? 'btn-emerald' : 'btn-emerald-soft'}"
+                        data-act="day-present" data-sid="${stu.id}" data-dk="${sched.dateStr}">
+                        ✓ Hadir Sehari
+                      </button>
                     </div>
-
-                    <button type="button"
-                      data-action="day-present"
-                      data-day-present-btn="${sched.dateStr}"
-                      data-student="${student.id}"
-                      data-date="${sched.dateStr}"
-                      class="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-bold transition ${
-                        bothPresent
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                          : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
-                      }">
-                      ✓ Hadir Sehari
-                    </button>
+                    <div class="two-col-grid">
+                      ${buildSingleSessionBoxHTML(stu.id, sched, 's1', sched.s1, s1Entry, sched.isCustomS1)}
+                      ${buildSingleSessionBoxHTML(stu.id, sched, 's2', sched.s2, s2Entry, sched.isCustomS2)}
+                    </div>
                   </div>
-
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    ${renderSingleSessionBox(student.id, sched, 's1', sched.s1, s1Entry, sched.isCustomS1)}
-                    ${renderSingleSessionBox(student.id, sched, 's2', sched.s2, s2Entry, sched.isCustomS2)}
-                  </div>
-                </div>
-              `;
-            }).join('')}
+                `;
+              }).join('')}
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
-    function renderSingleSessionBox(studentId, sched, sessionKey, mapelName, entry, isCustom) {
-      const sesiTitle = sessionKey === 's1' ? 'SESI 1' : 'SESI 2';
-      const sesiTagCls = sessionKey === 's1' ? 'bg-indigo-100 text-indigo-800' : 'bg-purple-100 text-purple-800';
-      const status = entry.status || '';
-      const susulan = Boolean(entry.susulan);
-      const isMissed = status && status !== 'Hadir';
-      const editKey = `${sched.dateStr}__${sessionKey}`;
-      const isEditing = singleInlineEditKey === editKey;
+    /**
+     * -------------------------------------------------------------------------
+     * TAB 3: INPUT 2 — ABSEN KELAS PER TANGGAL
+     * -------------------------------------------------------------------------
+     */
+    function buildClassStudentCardHTML(stu, idx, sched) {
+      const dayRec = (appState.attendance[stu.id] && appState.attendance[stu.id][sched.dateStr]) || {};
+      const s1Entry = dayRec.s1 || { status: '', susulan: false };
+      const s2Entry = dayRec.s2 || { status: '', susulan: false };
+      const bothPresent = s1Entry.status === 'Hadir' && s2Entry.status === 'Hadir';
 
-      const btns = [
-        { key: 'Hadir', on: 'bg-emerald-50 text-emerald-700 border-emerald-400 ring-1 ring-emerald-400 font-extrabold', off: 'bg-white text-slate-700 border-slate-200 hover:bg-emerald-50/70' },
-        { key: 'Izin', on: 'bg-blue-50 text-blue-700 border-blue-400 ring-1 ring-blue-400 font-extrabold', off: 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50/70' },
-        { key: 'Sakit', on: 'bg-amber-50 text-amber-800 border-amber-400 ring-1 ring-amber-400 font-extrabold', off: 'bg-white text-slate-700 border-slate-200 hover:bg-amber-50/70' },
-        { key: 'Alpha', on: 'bg-rose-50 text-rose-700 border-rose-400 ring-1 ring-rose-400 font-extrabold', off: 'bg-white text-slate-700 border-slate-200 hover:bg-rose-50/70' }
-      ];
+      const renderClassSession = function (ses, mapelName, entry) {
+        const st = entry.status || '';
+        const sus = Boolean(entry.susulan);
+        const isMissed = st && st !== 'Hadir';
+        const statuses = ['Hadir', 'Izin', 'Sakit', 'Alpha'];
 
-      const mapelHTML = isEditing
-        ? `<input type="text" id="single-inline-mapel-${editKey}" value="${escapeHTML(mapelName)}"
-            onkeydown="handleSingleInlineMapelKey(event, '${sched.dateStr}', '${sessionKey}')"
-            onblur="commitSingleInlineMapel('${sched.dateStr}', '${sessionKey}')"
-            class="w-full px-2 py-1 text-xs font-bold text-slate-900 bg-white border-2 border-indigo-500 rounded-md focus:outline-none" />`
-        : `<button type="button"
-            data-action="edit-mapel"
-            data-date="${sched.dateStr}"
-            data-session="${sessionKey}"
-            title="Klik untuk ubah mapel khusus tanggal ini"
-            class="inline-flex items-center gap-1 text-left min-w-0 truncate">
-            <span class="text-xs sm:text-sm font-bold text-slate-800 truncate ${isMissed && susulan ? 'line-through text-slate-400' : ''}">
-              ${escapeHTML(mapelName)}
-            </span>
-            ${isCustom ? '<span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>' : ''}
-          </button>`;
-
-      const susulanHTML = isMissed
-        ? (susulan
-            ? `<button type="button"
-                data-action="toggle-susulan"
-                data-student="${studentId}"
-                data-date="${sched.dateStr}"
-                data-session="${sessionKey}"
-                class="shrink-0 px-2.5 py-0.5 rounded-md bg-violet-600 text-white text-[11px] font-extrabold">
-                ✓ Sudah Susulan
-              </button>`
-            : `<button type="button"
-                data-action="toggle-susulan"
-                data-student="${studentId}"
-                data-date="${sched.dateStr}"
-                data-session="${sessionKey}"
-                class="shrink-0 px-2.5 py-0.5 rounded-md bg-rose-100 hover:bg-violet-600 text-rose-800 hover:text-white border border-rose-200 text-[11px] font-extrabold">
-                Susulan?
-              </button>`)
-        : '';
+        return `
+          <div class="session-box ${isMissed && !sus ? 'missed-active' : ''}">
+            <div class="session-head">
+              <div class="session-mapel-wrap">
+                <span class="sesi-tag ${ses === 's2' ? 's2' : ''}">${ses === 's1' ? 'SESI 1' : 'SESI 2'}</span>
+                <span style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(mapelName)}</span>
+              </div>
+              ${isMissed ? `
+                <button type="button" class="btn btn-sm ${sus ? 'btn-violet' : 'btn-rose-soft'}"
+                  data-act="toggle-susulan" data-sid="${stu.id}" data-dk="${sched.dateStr}" data-ses="${ses}">
+                  ${sus ? '✓ Susulan' : 'Susulan?'}
+                </button>
+              ` : ''}
+            </div>
+            <div class="status-grid">
+              ${statuses.map(function (val) {
+                return `
+                  <button type="button" class="st-btn ${st === val ? 'active-' + val : ''}"
+                    data-act="set-status" data-sid="${stu.id}" data-dk="${sched.dateStr}" data-ses="${ses}" data-val="${val}">
+                    ${val}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      };
 
       return `
-        <div data-session-box="${editKey}" class="p-3 rounded-xl bg-white border ${isMissed && !susulan ? 'border-rose-200 bg-rose-50/25' : 'border-slate-200'} space-y-2.5">
-          <div class="flex items-center justify-between gap-2 min-h-[24px]">
-            <div class="flex items-center gap-2 min-w-0 flex-1">
-              <span class="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-wide ${sesiTagCls}">${sesiTitle}</span>
-              ${mapelHTML}
+        <div data-class-row="${stu.id}" class="card" style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+              <span class="pill">${idx + 1}</span>
+              <button type="button" class="stu-link" data-act="open-student-card" data-sid="${stu.id}">
+                ${escapeHTML(stu.name)}
+              </button>
             </div>
-            ${susulanHTML}
+            <button type="button" class="btn btn-sm ${bothPresent ? 'btn-emerald' : 'btn-emerald-soft'}"
+              data-act="day-present" data-sid="${stu.id}" data-dk="${sched.dateStr}">
+              ✓ Hadir Sehari
+            </button>
           </div>
+          <div class="two-col-grid">
+            ${renderClassSession('s1', sched.s1, s1Entry)}
+            ${renderClassSession('s2', sched.s2, s2Entry)}
+          </div>
+        </div>
+      `;
+    }
 
-          <div class="grid grid-cols-4 gap-1.5 sm:gap-2">
-            ${btns.map(b => `
-              <button type="button"
-                data-action="set-status"
-                data-student="${studentId}"
-                data-date="${sched.dateStr}"
-                data-session="${sessionK
+    function renderClassTab() {
+      const dateSelect = document.getElementById('class-date-select');
+      const metaBar = document.getElementById('class-date-meta-bar');
+      const listEl = document.getElementById('class-students-attendance-list');
+
+      const groups = new Map();
+      scheduleList.forEach(function (s) {
+        if (!groups.has(s.pekan)) groups.set(s.pekan, []);
+        groups.get(s.pekan).push(s);
+      });
+
+      let optsHTML = '';
+      groups.forEach(function (items, pNum) {
+        optsHTML += `<optgroup label="Pekan ${pNum}">`;
+        items.forEach(function (s) {
+          optsHTML += `<option value="${s.dateStr}" ${s.dateStr === activeClassDateStr ? 'selected' : ''}>${s.pekanLabel} — ${s.dayName}, ${s.shortDate}</option>`;
+        });
+        optsHTML += `</optgroup>`;
+      });
+      dateSelect.innerHTML = optsHTML;
+
+      const sched = scheduleByDateMap.get(activeClassDateStr) || scheduleList[0];
+      if (!sched) return;
+
+      metaBar.innerHTML = `
+        <div class="two-col-grid">
+          <div style="display:flex;align-items:center;gap:8px;background:var(--primary-soft);padding:8px 10px;border-radius:var(--radius-md);border:1px solid var(--primary-border);">
+            <span class="sesi-tag">SESI 1</span>
+            <input type="text" id="class-edit-s1" value="${escapeHTML(sched.s1)}" data-dk="${sched.dateStr}" data-ses="s1" style="font-weight:700;" />
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--violet-soft);padding:8px 10px;border-radius:var(--radius-md);border:1px solid var(--violet-border);">
+            <span class="sesi-tag s2">SESI 2</span>
+            <input type="text" id="class-edit-s2" value="${escapeHTML(sched.s2)}" data-dk="${sched.dateStr}" data-ses="s2" style="font-weight:700;" />
+          </div>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <button type="button" class="btn btn-sm btn-emerald-soft" data-act="class-bulk-present" data-dk="${sched.dateStr}" data-val="s1">
+            ✓ Semua Hadir Sesi 1
+          </button>
+          <button type="button" class="btn btn-sm btn-emerald-soft" data-act="class-bulk-present" data-dk="${sched.dateStr}" data-val="s2">
+            ✓ Semua Hadir Sesi 2
+          </button>
+          <button type="button" class="btn btn-sm btn-emerald" data-act="class-bulk-present" data-dk="${sched.dateStr}" data-val="both">
+            ✓ Semua Hadir Sehari
+          </button>
+        </div>
+      `;
+
+      if (appState.students.length === 0) {
+        listEl.innerHTML = `<div class="card" style="text-align:center;color:var(--text-light);">Belum ada anak wali. Tambahkan siswa pada kolom di atas.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = appState.students.map(function (stu, idx) {
+        return buildClassStudentCardHTML(stu, idx, sched);
+      }).join('');
+    }
+
+    /**
+     * -------------------------------------------------------------------------
+     * TAB 4: UPLOAD SPREADSHEET MAPEL (PURE JS CSV + LAZY SHEETJS) & PENGATURAN
+     * -------------------------------------------------------------------------
+     */
+    function renderSettingsTab() {
+      const hasOv = Object.keys(appState.scheduleOverrides || {}).length > 0;
+      document.getElementById('btn-reset-overrides').classList.toggle('hidden', !hasOv);
+
+      [2, 4, 6].forEach(function (dow) {
+        const tpl = appState.templates[dow] || { s1: '', s2: '' };
+        document.getElementById(`set-tpl-${dow}-s1`).value = tpl.s1 || '';
+        document.getElementById(`set-tpl-${dow}-s2`).value = tpl.s2 || '';
+      });
+
+      document.getElementById('settings-quick-subjects').innerHTML =
+        `<span style="font-size:11px;font-weight:700;color:var(--text-light);align-self:center;">Isi cepat kolom aktif:</span>` +
+        SUBJECT_SUGGESTIONS.map(function (subj) {
+          return `<button type="button" class="btn btn-sm btn-neutral" data-act="quick-subject" data-val="${escapeHTML(subj)}">${escapeHTML(subj)}</button>`;
+        }).join('');
+
+      document.getElementById('settings-student-count').textContent = String(appState.students.length);
+      const stuTable = document.getElementById('settings-students-table');
+
+      if (appState.students.length === 0) {
+        stuTable.innerHTML = `<div style="padding:14px;text-align:center;border:1px dashed var(--border-strong);border-radius:var(--radius-md);font-size:12px;color:var(--text-light);">Belum ada anak wali terdaftar.</div>`;
+      } else {
+        stuTable.innerHTML = appState.students.map(function (stu, idx) {
+          const miss = computeStudentStats(stu.id, 'all').totalActiveMissed;
+          return `
+            <div class="missed-row">
+              <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+                <span class="pill">${idx + 1}</span>
+                <strong>${escapeHTML(stu.name)}</strong>
+                <span style="color:var(--text-light);">${stu.phone ? 'WA: ' + escapeHTML(stu.phone) : 'Tanpa WA'}</span>
+                <span class="pill ${miss > 0 ? 'pill-rose' : 'pill-emerald'}">${miss > 0 ? miss + ' Terlewat' : 'Aman'}</span>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button type="button" class="btn btn-sm btn-neutral" data-act="edit-student" data-sid="${stu.id}">Edit</button>
+                <button type="button" class="btn btn-sm btn-rose-soft" data-act="delete-student" data-sid="${stu.id}">Hapus</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render Upload Preview jika ada file terunggah
+      const previewWrap = document.getElementById('upload-preview-workspace');
+      if (!activeUploadSheet || !uploadSheetsData[activeUploadSheet]) {
+        previewWrap.classList.add('hidden');
+        previewWrap.style.display = 'none';
+      } else {
+        previewWrap.classList.remove('hidden');
+        previewWrap.style.display = 'flex';
+        renderUploadMappingAndPreview();
+      }
+    }
+
+    /**
+     * Pure JS CSV/TSV Parser (0ms, 100% Offline)
+     */
+    function parseDelimitedText(text) {
+      const lines = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+      let sampleLine = '';
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim()) { sampleLine = lines[i]; break; }
+      }
+      const sep = sampleLine.includes('\t') ? '\t' : (sampleLine.includes(';') && !sampleLine.includes(',') ? ';' : ',');
+
+      const rows = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (!line.trim()) continue;
+        const cells = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let c = 0; c < line.length; c++) {
+          const ch = line[c];
+          if (ch === '"') {
+            if (inQuotes && line[c + 1] === '"') {
+              cur += '"';
+              c++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (ch === sep && !inQuotes) {
+            cells.push(cur.trim());
+            cur = '';
+          } else {
+            cur += ch;
+          }
+        }
+        cells.push
