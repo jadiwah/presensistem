@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard & Sistem Presensi Otomatis Anak Wali (Sep–Des)</title>
+  <title>Sistem Presensi & Jadwal Otomatis Anak Wali (Sep–Des)</title>
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS (XLSX) via CDN untuk membaca & membuat file Excel (.xlsx, .xls, .csv) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <!-- Google Fonts: Plus Jakarta Sans & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -66,7 +68,7 @@
             </div>
             <div>
               <h1 class="font-display text-base sm:text-lg font-extrabold text-slate-900 leading-tight">
-                Sistem Presensi Otomatis Anak Wali
+                Sistem Presensi & Jadwal Otomatis Anak Wali
               </h1>
               <p id="header-schedule-info" class="text-xs text-slate-500 font-medium">
                 Selasa, Kamis, Sabtu • 1 Sep – 31 Des 2026 (Pekan 1 – Pekan 18)
@@ -84,13 +86,13 @@
         <div class="flex flex-wrap items-center gap-2">
           <div class="inline-flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
             <label for="year-selector" class="text-[11px] font-bold text-slate-500 px-2">Tahun Jadwal:</label>
-            <select id="year-selector" onchange="handleYearChange()"
-              class="bg-white text-slate-800 text-xs font-bold rounded-lg px-2.5 py-1 border border-slate-200 focus:outline-none focus:border-indigo-500">
-              <option value="2025">2025</option>
-              <option value="2026" selected>2026</option>
-              <option value="2027">2027</option>
-            </select>
-          </div>
+          <button type="button" onclick="switchTab('upload')"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Upload Excel Mapel
+          </button>
 
           <button type="button" onclick="exportSummaryToCSV()"
             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition">
@@ -133,13 +135,21 @@
           <span>Input 2: Absen Kelas Per Tanggal</span>
         </button>
 
+        <button type="button" id="tab-btn-upload" onclick="switchTab('upload')"
+          class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Upload Spreadsheet Mapel</span>
+        </button>
+
         <button type="button" id="tab-btn-settings" onclick="switchTab('settings')"
           class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
-          <span>Atur Siswa & Mapel</span>
+          <span>Kelola Siswa & Template</span>
         </button>
       </nav>
     </div>
@@ -343,7 +353,141 @@
     </section>
 
     <!-- ======================================================================= -->
-    <!-- TAB 4: ATUR SISWA, MAPEL & DATA                                         -->
+    <!-- TAB 4: UPLOAD SPREADSHEET JADWAL MAPEL SESI 1 & SESI 2                  -->
+    <!-- ======================================================================= -->
+    <section id="panel-upload" class="hidden space-y-5 animate-fade-in">
+      <!-- Kartu Upload & Download Template Excel -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-5">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+          <div class="space-y-1">
+            <h2 class="font-display text-base sm:text-lg font-extrabold text-slate-900">
+              Deteksi & Upload Spreadsheet Jadwal Mapel (Sesi 1 & Sesi 2)
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-500">
+              Unggah file <strong>.xlsx</strong>, <strong>.xls</strong>, atau <strong>.csv</strong>. Sistem otomatis mengenali tanggal Indonesia, serial tanggal Excel, maupun pasangan <em>Pekan + Hari</em> lalu mengisi seluruh jadwal secara serentak.
+            </p>
+          </div>
+
+          <button type="button" onclick="downloadExcelScheduleTemplate()"
+            class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-xs transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download Template Excel (.xlsx)
+          </button>
+        </div>
+
+        <!-- Area Drag & Drop File Spreadsheet -->
+        <div id="upload-dropzone"
+          ondragover="handleSpreadsheetDragOver(event)"
+          ondragleave="handleSpreadsheetDragLeave(event)"
+          ondrop="handleSpreadsheetDrop(event)"
+          onclick="document.getElementById('spreadsheet-file-input').click()"
+          class="cursor-pointer rounded-2xl border-2 border-dashed border-indigo-300 bg-indigo-50/40 hover:bg-indigo-50/80 hover:border-indigo-500 p-6 sm:p-10 text-center transition space-y-2.5">
+          <input type="file" id="spreadsheet-file-input" accept=".xlsx,.xls,.csv" onchange="handleSpreadsheetFileInput(event)" class="hidden" />
+          <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 mx-auto flex items-center justify-center">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+          </div>
+          <div>
+            <p class="font-display text-sm sm:text-base font-extrabold text-slate-900">
+              Seret & Lepas file Excel / CSV di sini, atau klik untuk memilih file
+            </p>
+            <p class="text-xs text-slate-500 mt-1">
+              Mendukung kolom <code>Tanggal | Sesi 1 | Sesi 2</code>, format vertikal <code>Tanggal | Sesi | Mapel</code>, maupun <code>Pekan | Hari | Sesi 1 | Sesi 2</code>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kontainer Pemetaan Kolom & Pratinjau Hasil Pembacaan (Muncul setelah file diunggah) -->
+      <div id="upload-preview-workspace" class="hidden space-y-5">
+        <!-- Panel Pemetaan Kolom Otomatis / Manual -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-100 text-indigo-700">AUTO-DETEKSI AKTIF</span>
+                <h3 id="upload-loaded-filename" class="font-display text-sm sm:text-base font-extrabold text-slate-900 truncate">file.xlsx</h3>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Sistem otomatis mencocokkan nama kolom di bawah ini. Anda dapat mengubah pemetaan kolom secara manual jika diperlukan.
+              </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                <label for="upload-sheet-select" class="text-xs font-bold text-slate-600">Sheet:</label>
+                <select id="upload-sheet-select" onchange="onChangeUploadSheet(this.value)"
+                  class="bg-white text-xs font-bold text-slate-900 rounded-lg px-2 py-1 border border-slate-200 focus:outline-none">
+                </select>
+              </div>
+
+              <div class="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                <label for="upload-layout-mode" class="text-xs font-bold text-slate-600">Format Baris:</label>
+                <select id="upload-layout-mode" onchange="onChangeUploadMapping()"
+                  class="bg-white text-xs font-bold text-slate-900 rounded-lg px-2 py-1 border border-slate-200 focus:outline-none">
+                  <option value="horizontal">1 Baris = Sesi 1 & Sesi 2</option>
+                  <option value="vertical">Vertikal (Kolom Sesi + Mapel)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grid Pemetaan Kolom -->
+          <div id="upload-mapping-controls" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <!-- Diisi dinamis oleh renderUploadMappingControls() -->
+          </div>
+        </div>
+
+        <!-- Panel Ringkasan & Tabel Pratinjau Sebelum Simpan -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-2xs space-y-4">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div id="upload-preview-summary" class="flex flex-wrap items-center gap-2.5">
+              <!-- Ringkasan jumlah baris cocok vs di luar Sep-Des -->
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="clearSpreadsheetUploadState()"
+                class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+                Batal / Unggah Ulang
+              </button>
+              <button type="button" id="btn-apply-spreadsheet-schedule" onclick="applySpreadsheetSchedule()"
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-xs sm:text-sm font-bold shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Terapkan Semua Mapel ke Jadwal
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabel Pratinjau -->
+          <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-[460px] overflow-y-auto">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead class="bg-slate-800 text-white sticky top-0 z-10 text-[11px] uppercase tracking-wider">
+                <tr>
+                  <th class="py-2.5 px-3">Baris</th>
+                  <th class="py-2.5 px-3">Pekan</th>
+                  <th class="py-2.5 px-3">Hari</th>
+                  <th class="py-2.5 px-3">Tanggal Terdeteksi</th>
+                  <th class="py-2.5 px-3">Mapel Sesi 1 Baru</th>
+                  <th class="py-2.5 px-3">Mapel Sesi 2 Baru</th>
+                  <th class="py-2.5 px-3 text-right">Status Pencocokan</th>
+                </tr>
+              </thead>
+              <tbody id="upload-preview-tbody" class="divide-y divide-slate-200 bg-white">
+                <!-- Diisi dinamis oleh renderUploadPreviewTable() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- TAB 5: KELOLA SISWA, TEMPLATE DEFAULT & BACKUP                          -->
     <!-- ======================================================================= -->
     <section id="panel-settings" class="hidden space-y-5 animate-fade-in">
       <!-- Bagian A: Editor Template Mapel Sesi 1 & 2 (Selasa, Kamis, Sabtu) -->
@@ -601,6 +745,26 @@
     // State UI Tab 4 (Settings)
     let activeTplInput = null;
 
+    // State UI Tab Upload Spreadsheet
+    let uploadedWorkbook = null;
+    let uploadedFileName = '';
+    let uploadedSheetNames = [];
+    let activeUploadSheetName = '';
+    let uploadHeaderRowIndex = 0;
+    let uploadHeaders = [];
+    let uploadRawRows = [];
+    let uploadColumnMap = {
+      layoutMode: 'horizontal',
+      dateCol: -1,
+      pekanCol: -1,
+      hariCol: -1,
+      sesi1Col: -1,
+      sesi2Col: -1,
+      sesiCol: -1,
+      mapelSingleCol: -1
+    };
+    let parsedSchedulePreview = [];
+
     /**
      * Membuat data contoh awal yang realistis agar aplikasi langsung terlihat hidup
      */
@@ -617,8 +781,7 @@
         students: [
           { id: 'stu_1', name: 'Ahmad Fauzan', phone: '6281234567801' },
           { id: 'stu_2', name: 'Siti Aisyah Putri', phone: '6281234567802' },
-          { id: 'stu_3', name: 'Muhammad Rizky', phone: '6281234567803' },
-          { id: 'stu_4', name: 'Nabila Khairunnisa', phone: '' }
+          { id: 'stu_3', name: 'Muhammad Rizky', phone: '6281234567803' }
         ],
         scheduleOverrides: {},
         attendance: {
@@ -639,11 +802,6 @@
             [`${year}-09-03`]: { sesi1: { status: 'Hadir', susulan: false }, sesi2: { status: 'Hadir', susulan: false } },
             [`${year}-09-05`]: { sesi1: { status: 'Hadir', susulan: false }, sesi2: { status: 'Hadir', susulan: false } },
             [`${year}-09-08`]: { sesi1: { status: 'Hadir', susulan: false }, sesi2: { status: 'Hadir', susulan: false } }
-          },
-          'stu_4': {
-            [`${year}-09-01`]: { sesi1: { status: 'Alpha', susulan: false }, sesi2: { status: 'Hadir', susulan: false } },
-            [`${year}-09-03`]: { sesi1: { status: 'Hadir', susulan: false }, sesi2: { status: 'Hadir', susulan: false } },
-            [`${year}-09-05`]: { sesi1: { status: 'Hadir', susulan: false }, sesi2: { status: 'Izin', susulan: true } }
           }
         }
       };
@@ -811,6 +969,9 @@
       appState.year = Number(document.getElementById('year-selector').value);
       saveAppState();
       generateSchedule();
+      if (uploadedWorkbook && activeUploadSheetName) {
+        parseActiveUploadSheet();
+      }
       renderCurrentView();
       showToast(`Tahun jadwal diperbarui ke ${appState.year}.`, 'info');
     }
@@ -822,11 +983,12 @@
      */
     function switchTab(tabName) {
       currentTab = tabName;
-      const tabs = ['rekap', 'single', 'class', 'settings'];
+      const tabs = ['rekap', 'single', 'class', 'upload', 'settings'];
 
       tabs.forEach(t => {
         const panel = document.getElementById(`panel-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
+        if (!panel || !btn) return;
         if (t === tabName) {
           panel.classList.remove('hidden');
           btn.className = 'shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-indigo-600 text-white shadow-xs transition';
@@ -935,6 +1097,7 @@
       if (currentTab === 'rekap') renderRekapTab();
       else if (currentTab === 'single') renderSingleTab();
       else if (currentTab === 'class') renderClassTab();
+      else if (currentTab === 'upload') renderUploadTab();
       else if (currentTab === 'settings') renderSettingsTab();
     }
 
@@ -1707,11 +1870,25 @@
       const metaBar = document.getElementById('class-date-meta-bar');
       const listContainer = document.getElementById('class-students-attendance-list');
 
-      // Isi opsi tanggal pertemuan (Selasa, Kamis, Sabtu)
-      dateSelect.innerHTML = scheduleList.map(sched => {
-        const label = `${sched.pekanLabel} — ${sched.dayName}, ${sched.shortDate}`;
-        return `<option value="${sched.dateStr}" ${sched.dateStr === activeClassDateStr ? 'selected' : ''}>${label}</option>`;
-      }).join('');
+      // Kelompokkan opsi tanggal pertemuan per Pekan (Pekan 1 .. Pekan 18)
+      const pekanGroups = new Map();
+      scheduleList.forEach(sched => {
+        if (!pekanGroups.has(sched.pekan)) {
+          pekanGroups.set(sched.pekan, []);
+        }
+        pekanGroups.get(sched.pekan).push(sched);
+      });
+
+      let groupedOptionsHTML = '';
+      pekanGroups.forEach((items, pekanNum) => {
+        groupedOptionsHTML += `<optgroup label="Pekan ${pekanNum}">`;
+        items.forEach(sched => {
+          const label = `${sched.pekanLabel} — ${sched.dayName}, ${sched.shortDate}`;
+          groupedOptionsHTML += `<option value="${sched.dateStr}" ${sched.dateStr === activeClassDateStr ? 'selected' : ''}>${label}</option>`;
+        });
+        groupedOptionsHTML += `</optgroup>`;
+      });
+      dateSelect.innerHTML = groupedOptionsHTML;
 
       const sched = scheduleList.find(s => s.dateStr === activeClassDateStr) || scheduleList[0];
       if (!sched) return;
@@ -1910,264 +2087,611 @@
 
     /**
      * =========================================================================
-     * 6. AKSI PRESENSI TERPADU (SINKRON ANTAR TAB 1, 2, DAN 3)
+     * 7B. SISTEM DETEKSI & UPLOAD SPREADSHEET JADWAL MAPEL (SHEETJS)
      * =========================================================================
      */
-    function setSessionAttendance(studentId, dateStr, sesiKey, status, allowToggleOff = false) {
-      if (!appState.attendance[studentId]) appState.attendance[studentId] = {};
-      if (!appState.attendance[studentId][dateStr]) {
-        appState.attendance[studentId][dateStr] = {
-          sesi1: { status: '', susulan: false },
-          sesi2: { status: '', susulan: false }
-        };
+    function renderUploadTab() {
+      const workspace = document.getElementById('upload-preview-workspace');
+      if (!uploadedWorkbook) {
+        workspace.classList.add('hidden');
+        return;
       }
-
-      const prev = appState.attendance[studentId][dateStr][sesiKey] || { status: '', susulan: false };
-      if (allowToggleOff && prev.status === status) {
-        appState.attendance[studentId][dateStr][sesiKey] = { status: '', susulan: false };
-      } else {
-        appState.attendance[studentId][dateStr][sesiKey] = {
-          status,
-          susulan: status === 'Hadir' ? false : Boolean(prev.susulan)
-        };
-      }
-
-      saveAppState();
-      renderCurrentView();
+      workspace.classList.remove('hidden');
+      renderUploadMappingControls();
+      renderUploadPreviewTable();
     }
 
-    function toggleSusulanStatus(studentId, dateStr, sesiKey) {
-      const entry = appState.attendance[studentId] &&
-        appState.attendance[studentId][dateStr] &&
-        appState.attendance[studentId][dateStr][sesiKey];
-      if (!entry || !entry.status || entry.status === 'Hadir') return;
-
-      entry.susulan = !entry.susulan;
-      saveAppState();
-      renderCurrentView();
-      showToast(
-        entry.susulan ? 'Ditandai ✓ Sudah Susulan.' : 'Status susulan dibatalkan.',
-        entry.susulan ? 'success' : 'info'
-      );
+    function handleSpreadsheetDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dz = document.getElementById('upload-dropzone');
+      dz.classList.add('border-indigo-600', 'bg-indigo-100/70');
     }
 
-    /**
-     * =========================================================================
-     * 7. RENDER TAB 4: ATUR SISWA, MAPEL & DATA
-     * =========================================================================
-     */
-    function renderSettingsTab() {
-      const t = appState.templates || {};
-      [2, 4, 6].forEach(dow => {
-        document.getElementById(`set-tpl-${dow}-s1`).value = (t[dow] && t[dow].sesi1) || '';
-        document.getElementById(`set-tpl-${dow}-s2`).value = (t[dow] && t[dow].sesi2) || '';
-      });
+    function handleSpreadsheetDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dz = document.getElementById('upload-dropzone');
+      dz.classList.remove('border-indigo-600', 'bg-indigo-100/70');
+    }
 
-      // Chip saran mapel
-      document.getElementById('settings-quick-subjects').innerHTML = SUBJECT_SUGGESTIONS.map(s => `
-        <button type="button" onclick="fillTemplateSubjectChip('${s}')"
-          class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-600 text-slate-700 hover:text-white border border-slate-200 hover:border-indigo-600 text-xs font-semibold transition">
-          + ${s}
-        </button>
-      `).join('');
+    function handleSpreadsheetDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dz = document.getElementById('upload-dropzone');
+      dz.classList.remove('border-indigo-600', 'bg-indigo-100/70');
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) processUploadedSpreadsheetFile(file);
+    }
 
-      const ovCount = Object.keys(appState.scheduleOverrides || {}).length;
-      const resetOvBtn = document.getElementById('btn-reset-overrides');
-      resetOvBtn.classList.toggle('hidden', ovCount === 0);
+    function handleSpreadsheetFileInput(e) {
+      const file = e.target.files && e.target.files[0];
+      if (file) processUploadedSpreadsheetFile(file);
+      e.target.value = '';
+    }
 
-      document.getElementById('settings-student-count').textContent = appState.students.length;
-      const tableEl = document.getElementById('settings-students-table');
-
-      if (appState.students.length === 0) {
-        tableEl.innerHTML = `<p class="text-xs text-slate-500 py-4 text-center">Belum ada data anak wali.</p>`;
+    function processUploadedSpreadsheetFile(file) {
+      if (typeof XLSX === 'undefined') {
+        showToast('Library SheetJS sedang dimuat. Pastikan koneksi internet aktif lalu coba lagi.', 'error');
         return;
       }
 
-      tableEl.innerHTML = appState.students.map((stu, idx) => `
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
-          <div class="flex items-center gap-2.5">
-            <span class="w-6 h-6 rounded-md bg-white border border-slate-200 text-xs font-bold text-slate-600 flex items-center justify-center">
-              ${idx + 1}
-            </span>
-            <div>
-              <p class="text-sm font-bold text-slate-900">${escapeHTML(stu.name)}</p>
-              <p class="text-xs text-slate-500">${stu.phone ? 'WA: ' + escapeHTML(stu.phone) : 'No. WA belum diisi'}</p>
-            </div>
-          </div>
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = new Uint8Array(ev.target.result);
+          const wb = XLSX.read(data, { type: 'array', cellDates: false });
+          if (!wb || !wb.SheetNames || wb.SheetNames.length === 0) {
+            throw new Error('Workbook kosong');
+          }
 
-          <div class="flex items-center gap-2 self-end sm:self-center">
-            <button type="button" onclick="jumpToStudentCardTab('${stu.id}')"
-              class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition">
-              Kartu Sep–Des
-            </button>
-            <button type="button" onclick="promptEditStudent('${stu.id}')"
-              class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold transition">
-              Edit
-            </button>
-            <button type="button" onclick="promptDeleteStudent('${stu.id}')"
-              class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition">
-              Hapus
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
+          uploadedWorkbook = wb;
+          uploadedFileName = file.name;
+          uploadedSheetNames = wb.SheetNames;
+          activeUploadSheetName = wb.SheetNames[0];
 
-    function fillTemplateSubjectChip(subj) {
-      const target = activeTplInput || document.getElementById('set-tpl-2-s1');
-      target.value = subj;
-      target.focus();
-    }
+          document.getElementById('upload-loaded-filename').textContent = uploadedFileName;
+          const sheetSel = document.getElementById('upload-sheet-select');
+          sheetSel.innerHTML = uploadedSheetNames.map(name =>
+            `<option value="${escapeHTML(name)}">${escapeHTML(name)}</option>`
+          ).join('');
 
-    function saveMapelTemplatesFromSettings() {
-      appState.templates = {
-        2: {
-          sesi1: document.getElementById('set-tpl-2-s1').value.trim() || 'Sesi 1',
-          sesi2: document.getElementById('set-tpl-2-s2').value.trim() || 'Sesi 2'
-        },
-        4: {
-          sesi1: document.getElementById('set-tpl-4-s1').value.trim() || 'Sesi 1',
-          sesi2: document.getElementById('set-tpl-4-s2').value.trim() || 'Sesi 2'
-        },
-        6: {
-          sesi1: document.getElementById('set-tpl-6-s1').value.trim() || 'Sesi 1',
-          sesi2: document.getElementById('set-tpl-6-s2').value.trim() || 'Sesi 2'
+          loadAndAutoDetectSheet(activeUploadSheetName);
+          renderUploadTab();
+          showToast(`File "${file.name}" berhasil dibaca! Periksa pratinjau di bawah.`, 'success');
+        } catch (err) {
+          console.error('Spreadsheet parse error:', err);
+          showToast('Gagal membaca file spreadsheet. Pastikan format .xlsx, .xls, atau .csv valid.', 'error');
         }
       };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function onChangeUploadSheet(sheetName) {
+      activeUploadSheetName = sheetName;
+      loadAndAutoDetectSheet(sheetName);
+      renderUploadTab();
+    }
+
+    function loadAndAutoDetectSheet(sheetName) {
+      const sheet = uploadedWorkbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      uploadRawRows = rows;
+
+      // Cari baris header dalam 10 baris pertama
+      let bestHeaderIdx = 0;
+      let bestScore = -1;
+      const limit = Math.min(rows.length, 10);
+
+      for (let r = 0; r < limit; r++) {
+        const row = rows[r] || [];
+        let score = 0;
+        row.forEach(cell => {
+          const txt = String(cell || '').trim().toLowerCase();
+          if (!txt) return;
+          if (/tanggal|tgl|date|waktu/.test(txt)) score += 3;
+          if (/pekan|minggu|week/.test(txt)) score += 2;
+          if (/hari|day/.test(txt)) score += 2;
+          if (/sesi|mapel|mata pelajaran|jam|subject|materi/.test(txt)) score += 3;
+        });
+        if (score > bestScore && score > 0) {
+          bestScore = score;
+          bestHeaderIdx = r;
+        }
+      }
+
+      uploadHeaderRowIndex = bestHeaderIdx;
+      const headerRow = rows[bestHeaderIdx] || [];
+      uploadHeaders = headerRow.map((cell, idx) => {
+        const label = String(cell || '').trim();
+        return label || `Kolom ${idx + 1}`;
+      });
+
+      // Auto-deteksi indeks kolom
+      const map = {
+        layoutMode: 'horizontal',
+        dateCol: -1,
+        pekanCol: -1,
+        hariCol: -1,
+        sesi1Col: -1,
+        sesi2Col: -1,
+        sesiCol: -1,
+        mapelSingleCol: -1
+      };
+
+      uploadHeaders.forEach((h, idx) => {
+        const norm = h.toLowerCase().replace(/[\s_\-\.]+/g, ' ').trim();
+        if (map.dateCol === -1 && /^(tanggal|tgl|date|waktu jadwal|jadwal tanggal)/.test(norm)) {
+          map.dateCol = idx;
+        } else if (map.pekanCol === -1 && /^(pekan|minggu|week|wk)/.test(norm)) {
+          map.pekanCol = idx;
+        } else if (map.hariCol === -1 && /^(hari|day)/.test(norm)) {
+          map.hariCol = idx;
+        } else if (map.sesi1Col === -1 && /(sesi\s*1|mapel\s*1|mapel\s*sesi\s*1|jam\s*1|^s1$)/.test(norm)) {
+          map.sesi1Col = idx;
+        } else if (map.sesi2Col === -1 && /(sesi\s*2|mapel\s*2|mapel\s*sesi\s*2|jam\s*2|^s2$)/.test(norm)) {
+          map.sesi2Col = idx;
+        } else if (map.sesiCol === -1 && /^(sesi|session|jam ke|sesi ke)$/.test(norm)) {
+          map.sesiCol = idx;
+        } else if (map.mapelSingleCol === -1 && /^(mapel|mata pelajaran|subject|materi|pelajaran)$/.test(norm)) {
+          map.mapelSingleCol = idx;
+        }
+      });
+
+      // Deteksi otomatis format vertikal jika Sesi 1 & Sesi 2 terpisah tidak ditemukan, tetapi ada kolom Sesi + Mapel
+      if (map.sesi1Col === -1 && map.sesi2Col === -1 && map.sesiCol !== -1 && map.mapelSingleCol !== -1) {
+        map.layoutMode = 'vertical';
+      }
+
+      uploadColumnMap = map;
+      parseActiveUploadSheet();
+    }
+
+    function renderUploadMappingControls() {
+      const modeSelect = document.getElementById('upload-layout-mode');
+      modeSelect.value = uploadColumnMap.layoutMode;
+
+      const buildColOptions = (selectedIdx, allowNone = true) => {
+        let html = allowNone ? `<option value="-1">-- Tidak Dipakai / Kosong --</option>` : '';
+        uploadHeaders.forEach((h, idx) => {
+          html += `<option value="${idx}" ${idx === selectedIdx ? 'selected' : ''}>Kolom ${idx + 1}: ${escapeHTML(h)}</option>`;
+        });
+        return html;
+      };
+
+      const container = document.getElementById('upload-mapping-controls');
+      if (uploadColumnMap.layoutMode === 'horizontal') {
+        container.innerHTML = `
+          <div>
+            <label for="map-col-date" class="block text-[11px] font-extrabold text-slate-600 mb-1">Kolom Tanggal</label>
+            <select id="map-col-date" onchange="onChangeUploadMapping()"
+              class="w-full px-2.5 py-2 text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl focus:border-indigo-500">
+              ${buildColOptions(uploadColumnMap.dateCol, true)}
+            </select>
+          </div>
+          <div>
+            <label for="map-col-pekan" class="block text-[11px] font-extrabold text-slate-600 mb-1">Kolom Pekan (Cadangan)</label>
+            <select id="map-col-pekan" onchange="onChangeUploadMapping()"
+              class="w-full px-2.5 py-2 text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl focus:border-indigo-500">
+              ${buildColOptions(uploadColumnMap.pekanCol, true)}
+            </select>
+          </div>
+          <div>
+            <label for="map-col-hari" class="block text-[11px] font-extrabold text-slate-600 mb-1">Kolom Hari (Cadangan)</label>
+            <select id="map-col-hari" onchange="onChangeUploadMapping()"
+              class="w-full px-2.5 py-2 text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl focus:border-indigo-500">
+              ${buildColOptions(uploadColumnMap.hariCol, true)}
+            </select>
+          </div>
+          <div>
+            <label for="map-col-s1" class="block text-[11px] font-extrabold text-indigo-700 mb-1">Kolom Mapel Sesi 1</label>
+            <select id="map-col-s1" onchange="onChangeUploadMapping()"
+              class="w-full px-2.5 py-2 text-xs font-bold bg-indigo-50/60 border border-indigo-300 rounded-xl focus:border-indigo-600">
+              ${buildColOptions(uploadColumnMap.sesi1Col, true)}
+            </select>
+          </div>
+          <div>
+            <label for="map-col-s2" class="block text-[11px] font-extrabold text-purple-700 mb-1">Kolom Mapel Sesi 2</label>
+            <select id="map-col-s2" onchange="onChangeUploadMapping()"
+              class="w-full px-2.5 py-2 text-xs font-bold bg-purple-50/60 border border-purple-300 rounded-xl focus:border-purple-600">
+              ${buildColOptions(uploadColumnMap.sesi2Col, true)}
+            </select>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div>
+            <label for="map-col-date" class="block text-[11px] font-extrabold text-slate-600 mb-1">Kolom Tanggal</label>
+            <select id="map-col-date" onchange="onChangeUploadMapping()"
+              class="w-full px-2.5 py-2 text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl focus:border-indigo-500">
+              ${buildColOptions(uploadColumnMap.dateCol, true)}
+            </select>
+          </div>
+          <div>
+            <label for="map-col-pekan" class="block text-[11px] font-extrabold text-slate-600 mb-1">Kolom Pekan (Cadangan)</label>
+            <select id="map-col-pekan" onchange="onChangeUploadMapping()"
+              class="w-full px-2.5 py-2 text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl focus:border-indigo-500">
+              ${buildColOptions(uploadColumnMap.pekanCol, true)}
+            </select>
+          </div>
+          <div>
+            <label for="map-col-hari" class="block text-[11px] font-extrabold text-slate-600 mb-1">Kolom Hari (Cadangan)</label>
+            <select id="map-col-hari" onchange="onChangeUploadMapping()"
+              class="w-full px-2.5 py-2 text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl focus:border-indigo-500">
+              ${buildColOptions(uploadColumnMap.hariCol, true)}
+            </select>
+          </div>
+          <div>
+            <label for="map-col-sesi-vert" class="block text-[11px] font-extrabold text-indigo-700 mb-1">Kolom Sesi (1 / 2)</label>
+            <select id="map-col-sesi-vert" onchange="onChangeUploadMapping()"
+              class="w-full px-2.5 py-2 text-xs font-bold bg-indigo-50/60 border border-indigo-300 rounded-xl focus:border-indigo-600">
+              ${buildColOptions(uploadColumnMap.sesiCol, true)}
+            </select>
+          </div>
+          <div>
+            <label for="map-col-mapel-vert" class="block text-[11px] font-extrabold text-purple-700 mb-1">Kolom Nama Mapel</label>
+            <select id="map-col-mapel-vert" onchange="onChangeUploadMapping()"
+              class="w-full px-2.5 py-2 text-xs font-bold bg-purple-50/60 border border-purple-300 rounded-xl focus:border-purple-600">
+              ${buildColOptions(uploadColumnMap.mapelSingleCol, true)}
+            </select>
+          </div>
+        `;
+      }
+    }
+
+    function onChangeUploadMapping() {
+      const mode = document.getElementById('upload-layout-mode').value;
+      uploadColumnMap.layoutMode = mode;
+
+      const dateEl = document.getElementById('map-col-date');
+      const pekanEl = document.getElementById('map-col-pekan');
+      const hariEl = document.getElementById('map-col-hari');
+      if (dateEl) uploadColumnMap.dateCol = Number(dateEl.value);
+      if (pekanEl) uploadColumnMap.pekanCol = Number(pekanEl.value);
+      if (hariEl) uploadColumnMap.hariCol = Number(hariEl.value);
+
+      if (mode === 'horizontal') {
+        const s1El = document.getElementById('map-col-s1');
+        const s2El = document.getElementById('map-col-s2');
+        if (s1El) uploadColumnMap.sesi1Col = Number(s1El.value);
+        if (s2El) uploadColumnMap.sesi2Col = Number(s2El.value);
+      } else {
+        const svEl = document.getElementById('map-col-sesi-vert');
+        const mvEl = document.getElementById('map-col-mapel-vert');
+        if (svEl) uploadColumnMap.sesiCol = Number(svEl.value);
+        if (mvEl) uploadColumnMap.mapelSingleCol = Number(mvEl.value);
+      }
+
+      parseActiveUploadSheet();
+      renderUploadTab();
+    }
+
+    /**
+     * Parser Tanggal Cerdas: Mendukung Serial Excel, ISO YYYY-MM-DD, DD/MM/YYYY, dan Teks Tanggal Indonesia
+     */
+    function parseFlexibleSpreadsheetDate(rawVal, defaultYear) {
+      if (rawVal === null || rawVal === undefined || rawVal === '') return null;
+
+      if (rawVal instanceof Date && !isNaN(rawVal.getTime())) {
+        return new Date(rawVal.getFullYear(), rawVal.getMonth(), rawVal.getDate());
+      }
+
+      if (typeof rawVal === 'number' && rawVal > 30000 && rawVal < 80000) {
+        const utcDays = Math.floor(rawVal - 25569);
+        const d = new Date(utcDays * 86400 * 1000);
+        return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+      }
+
+      let str = String(rawVal).trim();
+      if (!str) return null;
+
+      // Cek jika berupa angka serial berbentuk string (misal "46266")
+      if (/^\d{5}$/.test(str)) {
+        const serial = Number(str);
+        if (serial > 30000 && serial < 80000) {
+          const utcDays = Math.floor(serial - 25569);
+          const d = new Date(utcDays * 86400 * 1000);
+          return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+        }
+      }
+
+      // Hilangkan nama hari di depan jika ada, contoh: "Selasa, 1 September 2026" -> "1 September 2026"
+      str = str.replace(/^(minggu|senin|selasa|rabu|kamis|jumat|jum'at|sabtu|sunday|monday|tuesday|wednesday|thursday|friday|saturday)[,\s.\-]+/i, '').trim();
+
+      // Format ISO: YYYY-MM-DD atau YYYY/MM/DD
+      const isoMatch = str.match(/^(\d{4})[-\/\.](\d{1,2})[-\/\.](\d{1,2})$/);
+      if (isoMatch) {
+        const y = Number(isoMatch[1]);
+        const m = Number(isoMatch[2]) - 1;
+        const d = Number(isoMatch[3]);
+        const dt = new Date(y, m, d);
+        if (dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d) return dt;
+      }
+
+      // Format DD/MM/YYYY atau DD-MM-YYYY atau DD/MM
+      const dmyMatch = str.match(/^(\d{1,2})[-\/\.](\d{1,2})(?:[-\/\.](\d{2,4}))?$/);
+      if (dmyMatch) {
+        const d = Number(dmyMatch[1]);
+        const m = Number(dmyMatch[2]) - 1;
+        let y = dmyMatch[3] ? Number(dmyMatch[3]) : defaultYear;
+        if (y < 100) y += 2000;
+        const dt = new Date(y, m, d);
+        if (dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d) return dt;
+      }
+
+      // Format Teks Indonesia / Inggris: "1 September 2026", "03 Sep 2026", "15 Des"
+      const monthDict = {
+        jan: 0, januari: 0, january: 0,
+        feb: 1, februari: 1, february: 1,
+        mar: 2, maret: 2, march: 2,
+        apr: 3, april: 3,
+        mei: 4, may: 4,
+        jun: 5, juni: 5, june: 5,
+        jul: 6, juli: 6, july: 6,
+        agu: 7, agt: 7, agustus: 7, aug: 7, august: 7,
+        sep: 8, sept: 8, september: 8,
+        okt: 9, oktober: 9, oct: 9, october: 9,
+        nov: 10, nop: 10, november: 10, nopember: 10,
+        des: 11, desember: 11, dec: 11, december: 11
+      };
+
+      const textMatch = str.match(/^(\d{1,2})[\s\-\/\.]+([a-zA-Z\.]+)(?:[\s,\-\/\.]+(\d{2,4}))?$/);
+      if (textMatch) {
+        const d = Number(textMatch[1]);
+        const mKey = textMatch[2].replace(/\./g, '').toLowerCase();
+        if (Object.prototype.hasOwnProperty.call(monthDict, mKey)) {
+          const m = monthDict[mKey];
+          let y = textMatch[3] ? Number(textMatch[3]) : defaultYear;
+          if (y < 100) y += 2000;
+          const dt = new Date(y, m, d);
+          if (dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d) return dt;
+        }
+      }
+
+      return null;
+    }
+
+    function parseIndonesianDayOfWeek(rawHari) {
+      if (!rawHari) return -1;
+      const norm = String(rawHari).trim().toLowerCase();
+      if (norm.includes('selasa') || norm === 'tue' || norm === 'tuesday') return 2;
+      if (norm.includes('kamis') || norm === 'thu' || norm === 'thursday') return 4;
+      if (norm.includes('sabtu') || norm === 'sat' || norm === 'saturday') return 6;
+      if (norm.includes('senin')) return 1;
+      if (norm.includes('rabu')) return 3;
+      if (norm.includes('jumat') || norm.includes("jum'at")) return 5;
+      if (norm.includes('minggu')) return 0;
+      return -1;
+    }
+
+    function parseActiveUploadSheet() {
+      const scheduleByDate = new Map();
+      scheduleList.forEach(s => scheduleByDate.set(s.dateStr, s));
+
+      const defaultYear = Number(appState.year) || 2026;
+      const results = [];
+      const verticalGrouped = new Map();
+
+      for (let r = uploadHeaderRowIndex + 1; r < uploadRawRows.length; r++) {
+        const row = uploadRawRows[r] || [];
+        // Lewati baris yang benar-benar kosong
+        if (row.every(cell => String(cell || '').trim() === '')) continue;
+
+        const rawDate = uploadColumnMap.dateCol >= 0 ? row[uploadColumnMap.dateCol] : '';
+        const rawPekan = uploadColumnMap.pekanCol >= 0 ? row[uploadColumnMap.pekanCol] : '';
+        const rawHari = uploadColumnMap.hariCol >= 0 ? row[uploadColumnMap.hariCol] : '';
+
+        let matchedSched = null;
+        let parsedDateObj = parseFlexibleSpreadsheetDate(rawDate, defaultYear);
+        let displayDateText = rawDate !== '' ? String(rawDate).trim() : '-';
+
+        if (parsedDateObj) {
+          const dStr = formatYYYYMMDD(parsedDateObj);
+          displayDateText = `${DAY_NAMES_ID[parsedDateObj.getDay()]}, ${formatShortDateID(parsedDateObj)}`;
+          if (scheduleByDate.has(dStr)) {
+            matchedSched = scheduleByDate.get(dStr);
+          }
+        }
+
+        // Cadangan: Pencocokan berdasarkan Pekan + Hari jika tanggal tidak terisi / tidak cocok
+        if (!matchedSched && rawPekan !== '' && rawHari !== '') {
+          const pekanDigits = String(rawPekan).match(/\d+/);
+          const dow = parseIndonesianDayOfWeek(rawHari);
+          if (pekanDigits && dow !== -1) {
+            const pekanNum = Number(pekanDigits[0]);
+            matchedSched = scheduleList.find(s => s.pekan === pekanNum && s.dow === dow) || null;
+            if (matchedSched) {
+              displayDateText = `${matchedSched.dayName}, ${matchedSched.shortDate}`;
+            }
+          }
+        }
+
+        if (uploadColumnMap.layoutMode === 'horizontal') {
+          const s1Val = uploadColumnMap.sesi1Col >= 0 ? String(row[uploadColumnMap.sesi1Col] || '').trim() : '';
+          const s2Val = uploadColumnMap.sesi2Col >= 0 ? String(row[uploadColumnMap.sesi2Col] || '').trim() : '';
+
+          if (!s1Val && !s2Val && !matchedSched) continue;
+
+          results.push({
+            excelRowNum: r + 1,
+            matchedSched,
+            pekanText: matchedSched ? matchedSched.pekanLabel : (rawPekan ? String(rawPekan) : '-'),
+            hariText: matchedSched ? matchedSched.dayName : (rawHari ? String(rawHari) : '-'),
+            dateText: displayDateText,
+            sesi1: s1Val,
+            sesi2: s2Val,
+            isValid: Boolean(matchedSched && (s1Val || s2Val)),
+            reason: !matchedSched
+              ? 'Di Luar Sep–Des / Bukan Selasa-Kamis-Sabtu'
+              : (!s1Val && !s2Val ? 'Kolom Mapel Kosong' : 'Cocok Jadwal')
+          });
+        } else {
+          // Format vertikal: menggabungkan baris Sesi 1 dan Sesi 2 berdasarkan tanggal/jadwal yang sama
+          const rawSesi = uploadColumnMap.sesiCol >= 0 ? String(row[uploadColumnMap.sesiCol] || '').trim().toLowerCase() : '';
+          const rawMapel = uploadColumnMap.mapelSingleCol >= 0 ? String(row[uploadColumnMap.mapelSingleCol] || '').trim() : '';
+          if (!rawMapel && !matchedSched) continue;
+
+          const groupKey = matchedSched ? matchedSched.dateStr : `unmatched_${r}`;
+          if (!verticalGrouped.has(groupKey)) {
+            verticalGrouped.set(groupKey, {
+              excelRowNum: r + 1,
+              matchedSched,
+              pekanText: matchedSched ? matchedSched.pekanLabel : (rawPekan ? String(rawPekan) : '-'),
+              hariText: matchedSched ? matchedSched.dayName : (rawHari ? String(rawHari) : '-'),
+              dateText: displayDateText,
+              sesi1: '',
+              sesi2: '',
+              isValid: false,
+              reason: !matchedSched ? 'Di Luar Sep–Des / Bukan Selasa-Kamis-Sabtu' : 'Menunggu Data Sesi'
+            });
+          }
+
+          const grp = verticalGrouped.get(groupKey);
+          if (rawSesi.includes('1')) grp.sesi1 = rawMapel;
+          else if (rawSesi.includes('2')) grp.sesi2 = rawMapel;
+
+          if (grp.matchedSched && (grp.sesi1 || grp.sesi2)) {
+            grp.isValid = true;
+            grp.reason = 'Cocok Jadwal';
+          }
+        }
+      }
+
+      if (uploadColumnMap.layoutMode === 'vertical') {
+        verticalGrouped.forEach(item => results.push(item));
+      }
+
+      parsedSchedulePreview = results;
+    }
+
+    function renderUploadPreviewTable() {
+      const validRows = parsedSchedulePreview.filter(r => r.isValid);
+      const invalidRows = parsedSchedulePreview.filter(r => !r.isValid);
+
+      document.getElementById('upload-preview-summary').innerHTML = `
+        <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 text-xs font-extrabold">
+          Total Baris Terbaca: ${parsedSchedulePreview.length}
+        </span>
+        <span class="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-extrabold">
+          ✓ Cocok Jadwal Sep–Des: ${validRows.length} Pertemuan
+        </span>
+        ${invalidRows.length > 0 ? `
+          <span class="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-xs font-extrabold">
+            ! Di Luar Jadwal / Diabaikan: ${invalidRows.length} Baris
+          </span>
+        ` : ''}
+      `;
+
+      const applyBtn = document.getElementById('btn-apply-spreadsheet-schedule');
+      applyBtn.disabled = validRows.length === 0;
+
+      const tbody = document.getElementById('upload-preview-tbody');
+      if (parsedSchedulePreview.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-8 px-4 text-center text-xs text-slate-500">
+              Tidak ditemukan baris data jadwal pada sheet ini. Periksa kembali pemetaan kolom di atas.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = parsedSchedulePreview.map(item => {
+        const s1Display = item.sesi1
+          ? `<span class="font-bold text-slate-900">${escapeHTML(item.sesi1)}</span>`
+          : `<span class="text-slate-400 italic text-xs">(Tetap: ${item.matchedSched ? escapeHTML(item.matchedSched.sesi1) : '-'})</span>`;
+        const s2Display = item.sesi2
+          ? `<span class="font-bold text-slate-900">${escapeHTML(item.sesi2)}</span>`
+          : `<span class="text-slate-400 italic text-xs">(Tetap: ${item.matchedSched ? escapeHTML(item.matchedSched.sesi2) : '-'})</span>`;
+
+        const badgeHTML = item.isValid
+          ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ Cocok Jadwal</span>`
+          : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-800 border border-amber-200">${escapeHTML(item.reason)}</span>`;
+
+        return `
+          <tr class="${item.isValid ? 'bg-white hover:bg-indigo-50/30' : 'bg-slate-50/80 text-slate-500'}">
+            <td class="py-2.5 px-3 text-xs font-mono text-slate-400">#${item.excelRowNum}</td>
+            <td class="py-2.5 px-3 text-xs font-extrabold text-indigo-700">${escapeHTML(item.pekanText)}</td>
+            <td class="py-2.5 px-3 text-xs font-semibold">${escapeHTML(item.hariText)}</td>
+            <td class="py-2.5 px-3 text-xs font-bold text-slate-800">${escapeHTML(item.dateText)}</td>
+            <td class="py-2.5 px-3 text-xs">${s1Display}</td>
+            <td class="py-2.5 px-3 text-xs">${s2Display}</td>
+            <td class="py-2.5 px-3 text-right">${badgeHTML}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function applySpreadsheetSchedule() {
+      const validRows = parsedSchedulePreview.filter(r => r.isValid && r.matchedSched);
+      if (validRows.length === 0) return;
+
+      let updatedCount = 0;
+      validRows.forEach(item => {
+        const dStr = item.matchedSched.dateStr;
+        if (!appState.scheduleOverrides[dStr]) {
+          appState.scheduleOverrides[dStr] = {};
+        }
+        if (item.sesi1) {
+          appState.scheduleOverrides[dStr].sesi1 = item.sesi1;
+        }
+        if (item.sesi2) {
+          appState.scheduleOverrides[dStr].sesi2 = item.sesi2;
+        }
+        updatedCount++;
+      });
+
       saveAppState();
       generateSchedule();
       renderCurrentView();
-      showToast('Template Mapel Sesi 1 & 2 berhasil diterapkan ke seluruh jadwal!', 'success');
+      showToast(`Berhasil menerapkan mapel Sesi 1 & 2 untuk ${updatedCount} pertemuan Sep–Des!`, 'success');
     }
 
-    function promptResetScheduleOverrides() {
-      openAppModal({
-        title: 'Reset Mapel Kustom Tanggal Tertentu?',
-        bodyHTML: `<p>Semua perubahan mapel khusus pada tanggal tertentu akan dikembalikan mengikuti Template Rutin Selasa, Kamis, Sabtu.</p>`,
-        actions: [
-          { label: 'Batal', className: 'px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold', onClick: closeAppModal },
-          {
-            label: 'Ya, Reset Mapel Kustom',
-            className: 'px-4 py-2 rounded-xl bg-amber-600 text-white text-xs font-bold',
-            onClick: () => {
-              appState.scheduleOverrides = {};
-              saveAppState();
-              generateSchedule();
-              closeAppModal();
-              renderCurrentView();
-              showToast('Semua tanggal kembali mengikuti template mapel rutin.', 'info');
-            }
-          }
-        ]
-      });
+    function clearSpreadsheetUploadState() {
+      uploadedWorkbook = null;
+      uploadedFileName = '';
+      uploadedSheetNames = [];
+      activeUploadSheetName = '';
+      uploadHeaders = [];
+      uploadRawRows = [];
+      parsedSchedulePreview = [];
+      renderUploadTab();
     }
 
-    function handleAddSingleStudentSettings(e) {
-      e.preventDefault();
-      const nameInp = document.getElementById('set-stu-name');
-      const phoneInp = document.getElementById('set-stu-phone');
-      const name = nameInp.value.trim();
-      const phone = normalizePhoneID(phoneInp.value.trim());
-      if (!name) return;
+    function downloadExcelScheduleTemplate() {
+      if (typeof XLSX === 'undefined') {
+        showToast('Library SheetJS sedang dimuat. Silakan coba beberapa detik lagi.', 'error');
+        return;
+      }
 
-      const id = 'stu_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
-      appState.students.push({ id, name, phone });
-      activeSingleStudentId = id;
-      nameInp.value = '';
-      phoneInp.value = '';
+      const aoa = [
+        ['Pekan', 'Hari', 'Tanggal', 'Mapel Sesi 1', 'Mapel Sesi 2']
+      ];
 
-      saveAppState();
-      renderCurrentView();
-      showToast(`Anak wali "${name}" berhasil ditambahkan!`, 'success');
-    }
-
-    function handleBulkAddStudentsSettings() {
-      const ta = document.getElementById('set-bulk-names');
-      const lines = ta.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      if (lines.length === 0) return;
-
-      let added = 0;
-      lines.forEach((line, i) => {
-        const parts = line.split(/\s+-\s+|\t|;/);
-        const name = (parts[0] || '').trim();
-        const phone = parts[1] ? normalizePhoneID(parts[1].trim()) : '';
-        if (name) {
-          const id = 'stu_' + (Date.now() + i) + '_' + Math.random().toString(36).slice(2, 6);
-          appState.students.push({ id, name, phone });
-          added++;
-        }
+      scheduleList.forEach(sched => {
+        aoa.push([
+          sched.pekanLabel,
+          sched.dayName,
+          sched.dateStr,
+          sched.sesi1,
+          sched.sesi2
+        ]);
       });
 
-      ta.value = '';
-      saveAppState();
-      renderCurrentView();
-      showToast(`${added} anak wali berhasil ditambahkan sekaligus!`, 'success');
-    }
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = [
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 28 },
+        { wch: 28 }
+      ];
 
-    function promptEditStudent(studentId) {
-      const stu = appState.students.find(s => s.id === studentId);
-      if (!stu) return;
-
-      openAppModal({
-        title: 'Edit Data Anak Wali',
-        bodyHTML: `
-          <div class="space-y-3">
-            <div>
-              <label for="modal-edit-name" class="block text-xs font-bold text-slate-700 mb-1">Nama Anak Wali</label>
-              <input type="text" id="modal-edit-name" value="${escapeHTML(stu.name)}"
-                class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500" />
-            </div>
-            <div>
-              <label for="modal-edit-phone" class="block text-xs font-bold text-slate-700 mb-1">No. WhatsApp (Opsional)</label>
-              <input type="text" id="modal-edit-phone" value="${escapeHTML(stu.phone || '')}" placeholder="081234567890"
-                class="w-full px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:border-indigo-500" />
-            </div>
-          </div>
-        `,
-        actions: [
-          { label: 'Batal', className: 'px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold', onClick: closeAppModal },
-          {
-            label: 'Simpan Perubahan',
-            className: 'px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold',
-            onClick: () => {
-              const name = document.getElementById('modal-edit-name').value.trim();
-              const phone = normalizePhoneID(document.getElementById('modal-edit-phone').value.trim());
-              if (!name) return;
-              stu.name = name;
-              stu.phone = phone;
-              saveAppState();
-              closeAppModal();
-              renderCurrentView();
-              showToast('Data anak wali diperbarui.', 'success');
-            }
-          }
-        ]
-      });
-    }
-
-    function promptDeleteStudent(studentId) {
-      const stu = appState.students.find(s => s.id === studentId);
-      if (!stu) return;
-
-      openAppModal({
-        title: `Hapus ${stu.name}?`,
-        bodyHTML: `<p>Data anak wali <strong>${escapeHTML(stu.name)}</strong> beserta seluruh riwayat presensinya akan dihapus permanen.</p>`,
-        actions: [
-          { label: 'Batal', className: 'px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold', onClick: closeAppModal },
-          {
-            label: 'Ya, Hapus',
-            className: 'px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold',
-            onClick: () => {
-              appState.students = appState.students.filter(s => s.id !== studentId);
-              delete appState.attendance[studentId];
-              saveAppState();
-              closeAppModal();
-              renderCurrentView();
-              showToast(`"${stu.name}" dihapus dari daftar.`, 'info');
-            }
-          }
-        ]
-      });
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, `Jadwal_Mapel_${appState.year}`);
+      XLSX.writeFile(wb, `Template_Jadwal_Mapel_Sep_Des_${appState.year}.xlsx`);
+      showToast(`Template Excel (${scheduleList.length} pertemuan) berhasil diunduh!`, 'success');
     }
 
     /**
